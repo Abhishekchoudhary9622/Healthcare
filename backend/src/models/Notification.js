@@ -1,0 +1,3 @@
+const mongoose = require('mongoose');
+const s = new mongoose.Schema({ appointmentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Appointment' }, recipientEmail: { type: String, required: true }, recipientName: { type: String, required: true }, type: { type: String, required: true }, status: { type: String, enum: ['PENDING','SENT','FAILED','RETRYING'], default: 'PENDING' }, subject: { type: String, required: true }, body: { type: String, required: true }, attempts: { type: Number, default: 0 }, lastAttemptAt: Date, sentAt: Date, errorMessage: String }, { timestamps: true });
+module.exports = mongoose.model('Notification', s);

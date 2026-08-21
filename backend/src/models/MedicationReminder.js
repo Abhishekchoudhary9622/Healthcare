@@ -1,0 +1,3 @@
+const mongoose = require('mongoose');
+const s = new mongoose.Schema({ prescriptionId: { type: mongoose.Schema.Types.ObjectId, ref: 'Prescription', required: true }, appointmentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Appointment', required: true }, patientEmail: { type: String, required: true }, patientName: { type: String, required: true }, medicationName: { type: String, required: true }, dosage: { type: String, required: true }, scheduledFor: { type: Date, required: true }, sent: { type: Boolean, default: false }, sentAt: Date }, { timestamps: true });
+module.exports = mongoose.model('MedicationReminder', s);

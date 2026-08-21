@@ -1,0 +1,45 @@
+# ── Node ─────────────────────────────────────────────
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ── Environment (contains secrets — never commit) ────
+backend/.env
+frontend/.env
+frontend/.env.local
+*.env
+
+# ── Build output ──────────────────────────────────────
+backend/public/
+frontend/dist/
+
+# ── Database ──────────────────────────────────────────
+backend/prisma/dev.db
+backend/prisma/dev.db-journal
+*.db
+*.db-journal
+
+# ── Prisma migrations (SQLite leftovers) ─────────────
+backend/prisma/migrations/
+
+# ── OS / Editor ───────────────────────────────────────
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ── Logs ──────────────────────────────────────────────
+logs/
+*.log
+
+# ── Test / temp files ─────────────────────────────────
+t.js
+t2.js
+t3.js
+tc.js
+tg.js
+check.js
+test_gemini.js

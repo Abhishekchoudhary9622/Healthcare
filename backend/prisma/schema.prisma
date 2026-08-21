@@ -1,0 +1,200 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  password      String
+  role          String
+  firstName     String
+  lastName      String
+  phone         String?
+  avatar        String?
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  doctorProfile  DoctorProfile?
+  patientProfile PatientProfile?
+  refreshTokens  RefreshToken[]
+
+  @@map("users")
+}
+
+model DoctorProfile {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  specialisation  String
+  qualifications  String
+  experience      Int
+  bio             String?
+  consultationFee Float    @default(0)
+  slotDuration    Int      @default(30)
+  workingHours    String
+  isVerified      Boolean  @default(false)
+  calendarId      String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  appointments Appointment[]
+  leaveDays    LeaveDay[]
+
+  @@map("doctor_profiles")
+}
+
+model PatientProfile {
+  id               String    @id @default(uuid())
+  userId           String    @unique
+  dateOfBirth      DateTime?
+  gender           String?
+  bloodGroup       String?
+  allergies        String?
+  medicalHistory   String?
+  address          String?
+  emergencyContact String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  appointments Appointment[]
+
+  @@map("patient_profiles")
+}
+
+model LeaveDay {
+  id              String   @id @default(uuid())
+  doctorProfileId String
+  date            DateTime
+  reason          String?
+  createdAt       DateTime @default(now())
+
+  doctor DoctorProfile @relation(fields: [doctorProfileId], references: [id], onDelete: Cascade)
+
+  @@unique([doctorProfileId, date])
+  @@map("leave_days")
+}
+
+model Appointment {
+  id               String    @id @default(uuid())
+  doctorProfileId  String
+  patientProfileId String
+  scheduledAt      DateTime
+  endsAt           DateTime
+  status           String    @default("PENDING")
+  holdExpiresAt    DateTime?
+
+  symptoms           String?
+  preVisitSummary    String?
+  urgencyLevel       String?
+  chiefComplaint     String?
+  suggestedQuestions String?
+
+  clinicalNotes    String?
+  prescription     String?
+  postVisitSummary String?
+  followUpDate     DateTime?
+
+  googleCalendarEventIdDoctor  String?
+  googleCalendarEventIdPatient String?
+
+  cancelReason    String?
+  rescheduledFrom String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  doctor        DoctorProfile        @relation(fields: [doctorProfileId], references: [id])
+  patient       PatientProfile       @relation(fields: [patientProfileId], references: [id])
+  notifications Notification[]
+  prescriptions Prescription[]
+  reminders     MedicationReminder[]
+
+  @@map("appointments")
+}
+
+model Prescription {
+  id             String   @id @default(uuid())
+  appointmentId  String
+  medicationName String
+  dosage         String
+  frequency      String
+  durationDays   Int
+  instructions   String?
+  startDate      DateTime @default(now())
+  createdAt      DateTime @default(now())
+
+  appointment Appointment          @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  reminders   MedicationReminder[]
+
+  @@map("prescriptions")
+}
+
+model MedicationReminder {
+  id             String    @id @default(uuid())
+  prescriptionId String
+  appointmentId  String
+  patientEmail   String
+  patientName    String
+  medicationName String
+  dosage         String
+  scheduledFor   DateTime
+  sent           Boolean   @default(false)
+  sentAt         DateTime?
+  createdAt      DateTime  @default(now())
+
+  prescription Prescription @relation(fields: [prescriptionId], references: [id], onDelete: Cascade)
+  appointment  Appointment  @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+
+  @@map("medication_reminders")
+}
+
+model Notification {
+  id             String    @id @default(uuid())
+  appointmentId  String?
+  recipientEmail String
+  recipientName  String
+  type           String
+  status         String    @default("PENDING")
+  subject        String
+  body           String
+  attempts       Int       @default(0)
+  lastAttemptAt  DateTime?
+  sentAt         DateTime?
+  errorMessage   String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  appointment Appointment? @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+
+  @@map("notifications")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("refresh_tokens")
+}
+
+model SlotHold {
+  id              String   @id @default(uuid())
+  doctorProfileId String
+  scheduledAt     DateTime
+  patientUserId   String
+  expiresAt       DateTime
+  createdAt       DateTime @default(now())
+
+  @@unique([doctorProfileId, scheduledAt])
+  @@map("slot_holds")
+}
