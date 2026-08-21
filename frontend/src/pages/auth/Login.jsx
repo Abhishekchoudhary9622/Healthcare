@@ -119,12 +119,7 @@ export default function Login() {
             </Button>
           </form>
 
-          <div className="mt-4 p-4 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border)] text-xs text-[var(--text-secondary)] space-y-1">
-            <p className="font-medium text-[var(--text-primary)]">Demo credentials:</p>
-            <p>Admin: <code className="text-brand-600">admin@healthsync.com</code> / <code>Admin@123</code></p>
-            <p>Doctor: <code className="text-brand-600">dr.williams@healthsync.com</code> / <code>Doctor@123</code></p>
-            <p>Patient: <code className="text-brand-600">patient@healthsync.com</code> / <code>Patient@123</code></p>
-          </div>
+         
 
           <p className="mt-6 text-center text-sm text-[var(--text-secondary)]">
             No account?{' '}
