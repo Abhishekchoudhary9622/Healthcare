@@ -9,11 +9,10 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
-  build: {
-    // Build output goes directly into the backend's public folder
-    outDir: '../backend/public',
+ build: {
+    outDir: 'dist',
     emptyOutDir: true,
-  },
+},
   server: {
     port: 3000,
     proxy: {
