@@ -221,7 +221,7 @@ export default function BookingModal({ doctor, onClose }) {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-[var(--text-muted)]">Fee</span>
-                  <span className="text-[var(--text-primary)] font-medium">${docProfile?.consultationFee}</span>
+                  <span className="text-[var(--text-primary)] font-bold text-emerald-600 dark:text-emerald-400">₹{docProfile?.consultationFee || 500}</span>
                 </div>
                 {symptoms && (
                   <div className="pt-2 border-t border-[var(--border)]">

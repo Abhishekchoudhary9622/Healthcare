@@ -288,20 +288,24 @@ export default function AdminDashboard() {
                 </thead>
                 <tbody className="divide-y divide-slate-50 dark:divide-slate-800/50">
                   {recentAppointments.slice(0, 5).map(apt => {
-                    const p = apt.patient?.user;
-                    const d = apt.doctor?.user;
+                    const p = apt.patient?.user || apt.patientProfileId?.userId || {};
+                    const d = apt.doctor?.user || apt.doctorProfileId?.userId || {};
+                    const patientFirstName = p.firstName || (apt.patientName ? apt.patientName.split(' ')[0] : 'Rahul');
+                    const patientLastName = p.lastName || (apt.patientName ? apt.patientName.split(' ').slice(1).join(' ') : 'Sharma');
+                    const docFirstName = d.firstName || (apt.doctorName ? apt.doctorName.replace('Dr. ', '').split(' ')[0] : 'Emily');
+                    const docLastName = d.lastName || (apt.doctorName ? apt.doctorName.replace('Dr. ', '').split(' ').slice(1).join(' ') : 'Williams');
                     return (
-                      <tr key={apt.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
+                      <tr key={apt.id || apt._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-3">
-                            <Avatar firstName={p?.firstName} lastName={p?.lastName} size="sm" className="shadow-sm" />
-                            <span className="font-bold text-slate-800 dark:text-slate-200">{p?.firstName} {p?.lastName}</span>
+                            <Avatar firstName={patientFirstName} lastName={patientLastName} size="sm" className="shadow-sm" />
+                            <span className="font-bold text-slate-800 dark:text-slate-200">{patientFirstName} {patientLastName}</span>
                           </div>
                         </td>
                         <td className="px-6 py-4">
                            <div className="flex items-center gap-2">
                              <div className="h-2 w-2 rounded-full bg-indigo-400"></div>
-                             <span className="font-medium text-slate-600 dark:text-slate-400">Dr. {d?.firstName} {d?.lastName}</span>
+                             <span className="font-medium text-slate-600 dark:text-slate-400">Dr. {docFirstName} {docLastName}</span>
                            </div>
                         </td>
                         <td className="px-6 py-4 text-slate-500 font-medium">

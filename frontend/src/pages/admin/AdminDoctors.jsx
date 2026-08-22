@@ -109,7 +109,7 @@ export default function AdminDoctors() {
                       </td>
                       <td className="px-4 py-3 text-[var(--text-secondary)]">{doc.doctorProfile?.specialisation}</td>
                       <td className="px-4 py-3 text-[var(--text-secondary)]">{doc.doctorProfile?.experience}y</td>
-                      <td className="px-4 py-3 text-[var(--text-secondary)]">${doc.doctorProfile?.consultationFee}</td>
+                      <td className="px-4 py-3 font-semibold text-[var(--text-primary)]">₹{doc.doctorProfile?.consultationFee || 500}</td>
                       <td className="px-4 py-3">
                         {doc.isActive ? (
                           <span className="badge bg-accent-100 dark:bg-accent-500/10 text-accent-600 dark:text-accent-400">

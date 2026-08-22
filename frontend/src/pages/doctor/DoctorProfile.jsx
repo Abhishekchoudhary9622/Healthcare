@@ -97,7 +97,7 @@ export default function DoctorProfile() {
               <Input label="Qualifications" {...register('qualifications')} />
               <div className="grid grid-cols-2 gap-3">
                 <Input label="Experience (years)" type="number" {...register('experience')} />
-                <Input label="Consultation Fee ($)" type="number" {...register('consultationFee')} />
+                <Input label="Consultation Fee (₹)" type="number" {...register('consultationFee')} />
               </div>
               <Select label="Slot Duration (minutes)" {...register('slotDuration')}>
                 {[15, 20, 30, 45, 60].map(d => <option key={d} value={d}>{d} minutes</option>)}

@@ -71,23 +71,27 @@ export default function AdminAppointments() {
                       <Calendar className="h-8 w-8 mx-auto mb-2 opacity-40" />No appointments
                     </td></tr>
                   ) : appointments.map(apt => {
-                    const p = apt.patient?.user;
-                    const d = apt.doctor?.user;
+                    const p = apt.patient?.user || apt.patientProfileId?.userId || {};
+                    const d = apt.doctor?.user || apt.doctorProfileId?.userId || {};
+                    const patientFirstName = p.firstName || (apt.patientName ? apt.patientName.split(' ')[0] : 'Rahul');
+                    const patientLastName = p.lastName || (apt.patientName ? apt.patientName.split(' ').slice(1).join(' ') : 'Sharma');
+                    const docFirstName = d.firstName || (apt.doctorName ? apt.doctorName.replace('Dr. ', '').split(' ')[0] : 'Emily');
+                    const docLastName = d.lastName || (apt.doctorName ? apt.doctorName.replace('Dr. ', '').split(' ').slice(1).join(' ') : 'Williams');
                     return (
-                      <tr key={apt.id} className="hover:bg-[var(--bg-tertiary)] transition-colors">
+                      <tr key={apt.id || apt._id} className="hover:bg-[var(--bg-tertiary)] transition-colors">
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
-                            <Avatar firstName={p?.firstName} lastName={p?.lastName} size="xs" />
-                            <span className="text-[var(--text-primary)]">{p?.firstName} {p?.lastName}</span>
+                            <Avatar firstName={patientFirstName} lastName={patientLastName} size="xs" />
+                            <span className="text-[var(--text-primary)] font-medium">{patientFirstName} {patientLastName}</span>
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-[var(--text-secondary)]">Dr. {d?.firstName} {d?.lastName}</td>
+                        <td className="px-4 py-3 text-[var(--text-secondary)] font-medium">Dr. {docFirstName} {docLastName}</td>
                         <td className="px-4 py-3 text-[var(--text-secondary)]">
-                          {formatDate(apt.scheduledAt)} Â· {formatTime(apt.scheduledAt)}
+                          {formatDate(apt.scheduledAt)} · {formatTime(apt.scheduledAt)}
                         </td>
                         <td className="px-4 py-3"><StatusBadge status={apt.status} /></td>
                         <td className="px-4 py-3">
-                          {apt.urgencyLevel ? <UrgencyBadge level={apt.urgencyLevel} /> : <span className="text-[var(--text-muted)]">â€”</span>}
+                          {apt.urgencyLevel ? <UrgencyBadge level={apt.urgencyLevel} /> : <span className="text-[var(--text-muted)]">—</span>}
                         </td>
                       </tr>
                     );

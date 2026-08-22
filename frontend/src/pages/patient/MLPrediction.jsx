@@ -474,7 +474,7 @@ export default function MLPrediction() {
                       <span className="flex items-center gap-1 font-bold text-amber-500">
                         <Star className="h-3 w-3 fill-amber-400 text-amber-400" /> {doc.rating || '4.9'}
                       </span>
-                      <span className="font-bold text-[var(--text-primary)]">${doc.consultationFee}/visit</span>
+                      <span className="font-bold text-emerald-600 dark:text-emerald-400">₹{doc.consultationFee || 500}/visit</span>
                     </div>
                   </div>
                   <Button

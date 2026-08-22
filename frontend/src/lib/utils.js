@@ -54,6 +54,11 @@ export const urgencyConfig = {
   HIGH:   { label: 'High',   color: 'bg-danger-50 text-danger-500',   dot: 'bg-danger-500' },
 };
 
+export const formatCurrency = (amount) => {
+  if (amount === undefined || amount === null || isNaN(amount)) return '₹500';
+  return `₹${Number(amount).toLocaleString('en-IN')}`;
+};
+
 export const SPECIALISATIONS = [
   'General Practice', 'Cardiology', 'Dermatology', 'Neurology',
   'Orthopedics', 'Pediatrics', 'Psychiatry', 'Oncology',

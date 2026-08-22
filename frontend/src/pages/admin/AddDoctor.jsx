@@ -91,9 +91,10 @@ export default function AddDoctor() {
                   {...register('experience', { valueAsNumber: true })}
                 />
                 <Input
-                  label="Consultation Fee ($)"
+                  label="Consultation Fee (₹)"
                   type="number"
                   min="0"
+                  placeholder="e.g. 500"
                   {...register('consultationFee', { valueAsNumber: true })}
                 />
               </div>

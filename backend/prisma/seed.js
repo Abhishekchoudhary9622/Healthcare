@@ -35,7 +35,7 @@ async function main() {
     let user = await User.findOne({ email:d.email });
     if (!user) {
       user = await User.create({ email:d.email, password:await bcrypt.hash("Doctor@123",12), firstName:d.firstName, lastName:d.lastName, role:"DOCTOR" });
-      await DoctorProfile.create({ userId:user._id, specialisation:d.specialisation, qualifications:"MBBS, MD "+d.specialisation, experience:d.experience, bio:"Dr. "+d.lastName+" is an experienced specialist with "+d.experience+" years of practice.", consultationFee:150, slotDuration:30, isVerified:true });
+      await DoctorProfile.create({ userId:user._id, specialisation:d.specialisation, qualifications:"MBBS, MD "+d.specialisation, experience:d.experience, bio:"Dr. "+d.lastName+" is an experienced specialist with "+d.experience+" years of practice.", consultationFee:800, slotDuration:30, isVerified:true });
       console.log("Doctor created: "+d.email);
     }
   }
