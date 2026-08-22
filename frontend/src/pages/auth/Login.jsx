@@ -210,150 +210,149 @@ export default function Login() {
   return (
     <div className="min-h-screen flex bg-[var(--bg-primary)] overflow-hidden">
       {/* Left decorative medical showcase panel */}
-      <div className="hidden lg:flex lg:flex-1 bg-gradient-to-br from-[#060e1d] via-[#09172f] to-[#041c28] p-12 flex-col justify-between relative overflow-hidden border-r border-cyan-500/10">
+      <div className="hidden lg:flex lg:flex-1 bg-gradient-to-br from-[#061121] via-[#091b33] to-[#04202b] p-10 flex-col justify-between relative overflow-hidden border-r border-teal-500/15">
         
-        {/* Subtle medical grid pattern & ambient cyan/emerald glows */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#0ea5e910_1px,transparent_1px),linear-gradient(to_bottom,#0ea5e910_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none" />
-        <div className="absolute top-[-10%] left-[-10%] h-96 w-96 rounded-full bg-cyan-500/15 blur-[120px] pointer-events-none" />
-        <div className="absolute bottom-[-10%] right-[-10%] h-96 w-96 rounded-full bg-emerald-500/15 blur-[120px] pointer-events-none" />
-        <div className="absolute top-1/2 left-1/3 h-80 w-80 rounded-full bg-indigo-500/10 blur-[100px] pointer-events-none" />
+        {/* Ambient bioluminescent glows & subtle pattern */}
+        <div className="absolute inset-0 bg-[radial-gradient(#0ea5e915_1px,transparent_1px)] [background-size:24px_24px] pointer-events-none opacity-40" />
+        <div className="absolute top-[-5%] left-[-5%] h-80 w-80 rounded-full bg-teal-500/20 blur-[100px] pointer-events-none" />
+        <div className="absolute bottom-[-5%] right-[-5%] h-96 w-96 rounded-full bg-emerald-500/15 blur-[120px] pointer-events-none" />
+        <div className="absolute top-1/2 left-1/4 h-72 w-72 rounded-full bg-blue-500/10 blur-[90px] pointer-events-none" />
 
-        {/* Top Header: Medical Brand & Status */}
+        {/* Top Header: Brand & Live Patient Care Status */}
         <div className="relative z-10">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="h-11 w-11 rounded-2xl bg-gradient-to-tr from-cyan-500 to-blue-600 p-[1px] shadow-lg shadow-cyan-500/20">
-                <div className="h-full w-full bg-[#071326] rounded-2xl flex items-center justify-center">
-                  <Activity className="h-5 w-5 text-cyan-400 animate-pulse" />
+              <div className="h-12 w-12 rounded-2xl bg-gradient-to-tr from-teal-400 via-cyan-500 to-blue-600 p-[1.5px] shadow-lg shadow-teal-500/25">
+                <div className="h-full w-full bg-[#07172b] rounded-2xl flex items-center justify-center">
+                  <Activity className="h-6 w-6 text-teal-400" />
                 </div>
               </div>
               <div>
-                <span className="text-white font-extrabold text-xl tracking-tight flex items-center gap-2">
-                  HealthSync <span className="text-[10px] uppercase font-bold tracking-widest text-cyan-400 bg-cyan-950/60 px-2 py-0.5 rounded-full border border-cyan-500/30">Clinical OS</span>
+                <span className="text-white font-extrabold text-2xl tracking-tight flex items-center gap-2">
+                  HealthSync
                 </span>
-                <p className="text-[11px] text-slate-400">Intelligent Healthcare & EHR Ecosystem</p>
+                <p className="text-xs text-teal-300/80 font-medium">Healthcare Designed Around You</p>
               </div>
             </div>
 
-            {/* Live System Status Pill */}
-            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold">
-              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping" />
-              <span>Telehealth Online</span>
+            {/* Instant Care Badge */}
+            <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-semibold backdrop-blur-md">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+              <span>24/7 Doctors On-Call</span>
             </div>
           </div>
 
-          <div className="mt-10">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-500/30 text-cyan-300 text-xs font-semibold mb-4 backdrop-blur-sm">
-              <ShieldCheck className="h-3.5 w-3.5 text-cyan-400" />
-              HIPAA Compliant & 256-Bit Encrypted
+          {/* Main Hero Copy */}
+          <div className="mt-8">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-500/15 border border-teal-500/30 text-teal-200 text-xs font-semibold mb-3.5 backdrop-blur-sm">
+              <ShieldCheck className="h-3.5 w-3.5 text-teal-400" />
+              100% Certified Specialists • Instant E-Prescriptions
             </div>
-            <h2 className="text-4xl font-extrabold text-white leading-tight tracking-tight">
-              Precision Care,<br />
-              <span className="bg-gradient-to-r from-cyan-300 via-teal-200 to-indigo-300 bg-clip-text text-transparent">
-                Powered by Medical AI.
+            <h2 className="text-3xl xl:text-4xl font-extrabold text-white leading-tight tracking-tight">
+              Compassionate Care,<br />
+              <span className="bg-gradient-to-r from-teal-300 via-cyan-200 to-sky-300 bg-clip-text text-transparent">
+                Connected Seamlessly.
               </span>
             </h2>
-            <p className="mt-3 text-slate-300 text-base leading-relaxed max-w-md">
-              Seamlessly orchestrating appointments, real-time vital telemetry, predictive health risk modeling, and instant specialist consultations.
+            <p className="mt-2.5 text-slate-300 text-sm leading-relaxed max-w-md">
+              Book consultations with top-rated doctors, track emergency hospital beds, manage family health records, and receive care from home.
             </p>
           </div>
         </div>
 
-        {/* Center: Live Medical Telemetry & Doctor Match Cards */}
-        <div className="relative z-10 my-6 space-y-4 max-w-lg">
-          {/* Card 1: Real-time Patient Telemetry */}
-          <div className="bg-[#0b1b33]/70 backdrop-blur-xl border border-cyan-500/20 rounded-2xl p-4 shadow-xl shadow-black/40 hover:border-cyan-500/40 transition-all duration-300">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800/80">
-              <div className="flex items-center gap-2.5">
-                <div className="p-1.5 rounded-lg bg-rose-500/10 text-rose-400">
-                  <Activity className="h-4 w-4" />
+        {/* Center Showcase: Verified Doctor Card + Specialty Services + Live Vitals */}
+        <div className="relative z-10 my-4 space-y-3.5 max-w-xl">
+          
+          {/* Card 1: Verified Specialist Showcase */}
+          <div className="bg-[#0c1f38]/80 backdrop-blur-xl border border-teal-500/25 rounded-2xl p-4 shadow-2xl shadow-black/50 hover:border-teal-400/40 transition-all">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-700/60">
+              <div className="flex items-center gap-3">
+                <div className="relative">
+                  <img
+                    src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=120&auto=format&fit=crop&q=80"
+                    alt="Doctor"
+                    className="h-12 w-12 rounded-2xl object-cover ring-2 ring-teal-400/40 shadow-md"
+                  />
+                  <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-emerald-500 ring-2 ring-[#0c1f38]" />
                 </div>
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-300">Live Vitals Telemetry</span>
-              </div>
-              <span className="text-[11px] font-semibold text-emerald-400 flex items-center gap-1">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> Synced
-              </span>
-            </div>
-
-            <div className="grid grid-cols-3 gap-3 pt-3">
-              <div className="bg-[#071325]/80 rounded-xl p-2.5 border border-slate-800">
-                <p className="text-[10px] uppercase font-bold text-slate-400">Heart Rate</p>
-                <div className="flex items-baseline gap-1 mt-1">
-                  <span className="text-lg font-extrabold text-white">74</span>
-                  <span className="text-[10px] text-rose-400 font-semibold">BPM</span>
-                </div>
-              </div>
-              <div className="bg-[#071325]/80 rounded-xl p-2.5 border border-slate-800">
-                <p className="text-[10px] uppercase font-bold text-slate-400">Blood Pressure</p>
-                <div className="flex items-baseline gap-1 mt-1">
-                  <span className="text-lg font-extrabold text-white">120/80</span>
-                  <span className="text-[10px] text-cyan-400 font-semibold">mmHg</span>
+                <div>
+                  <div className="flex items-center gap-1.5">
+                    <h4 className="text-sm font-bold text-white">Dr. Emily Williams</h4>
+                    <Award className="h-3.5 w-3.5 text-teal-400" />
+                  </div>
+                  <p className="text-xs text-teal-300 font-medium">Cardiologist • MBBS, MD (12+ Yrs Exp)</p>
                 </div>
               </div>
-              <div className="bg-[#071325]/80 rounded-xl p-2.5 border border-slate-800">
-                <p className="text-[10px] uppercase font-bold text-slate-400">Blood Oxygen</p>
-                <div className="flex items-baseline gap-1 mt-1">
-                  <span className="text-lg font-extrabold text-white">99%</span>
-                  <span className="text-[10px] text-emerald-400 font-semibold">SpO2</span>
+              <div className="text-right">
+                <div className="flex items-center gap-1 text-amber-400 text-xs font-bold justify-end">
+                  <Star className="h-3.5 w-3.5 fill-current" /> 4.9
                 </div>
+                <p className="text-[10px] text-slate-400">1,420+ Patients</p>
               </div>
             </div>
 
-            {/* Glowing Heartbeat Wave SVG */}
-            <div className="mt-3 relative h-10 w-full overflow-hidden rounded-lg bg-[#071325]/60 flex items-center px-2">
-              <svg className="w-full h-8 stroke-cyan-400" viewBox="0 0 500 60" fill="none" preserveAspectRatio="none">
-                <path
-                  d="M0 30 L80 30 L90 20 L100 40 L110 10 L120 50 L130 30 L220 30 L230 22 L240 38 L250 15 L260 45 L270 30 L360 30 L370 20 L380 40 L390 10 L400 50 L410 30 L500 30"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
+            <div className="flex items-center justify-between pt-3 text-xs">
+              <div className="flex items-center gap-2 text-slate-300">
+                <Clock className="h-3.5 w-3.5 text-teal-400" />
+                <span>Next slot: <strong className="text-white">Today, 4:30 PM</strong></span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-slate-400">Consultation:</span>
+                <span className="px-2 py-0.5 rounded-lg bg-teal-500/20 text-teal-200 font-bold text-xs border border-teal-500/30">₹800</span>
+              </div>
             </div>
           </div>
 
-          {/* Card 2: AI Doctor Matching & ML Risk Assessment */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="bg-[#0b1b33]/70 backdrop-blur-xl border border-indigo-500/20 rounded-2xl p-3.5 shadow-lg">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="h-7 w-7 rounded-full bg-cyan-500/20 flex items-center justify-center text-cyan-300 font-bold text-xs">
-                  DR
+          {/* Card 2: Interactive Specialty Quick-Connect Grid */}
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { title: 'Cardiology', desc: 'Heart Health', icon: '❤️', color: 'from-rose-500/20 to-rose-900/10 border-rose-500/30 text-rose-300' },
+              { title: 'Dermatology', desc: 'Skin & Hair', icon: '✨', color: 'from-amber-500/20 to-amber-900/10 border-amber-500/30 text-amber-300' },
+              { title: 'Pediatrics', desc: 'Child Wellness', icon: '👶', color: 'from-sky-500/20 to-sky-900/10 border-sky-500/30 text-sky-300' },
+              { title: 'Neurology', desc: 'Brain & Spine', icon: '🧠', color: 'from-indigo-500/20 to-indigo-900/10 border-indigo-500/30 text-indigo-300' },
+              { title: 'Orthopedics', desc: 'Joints & Bones', icon: '🦴', color: 'from-emerald-500/20 to-emerald-900/10 border-emerald-500/30 text-emerald-300' },
+              { title: 'Emergency SOS', desc: 'Instant Hospital', icon: '🚑', color: 'from-red-500/20 to-red-900/10 border-red-500/30 text-red-300' },
+            ].map((s) => (
+              <div key={s.title} className={`p-2.5 rounded-xl bg-gradient-to-br ${s.color} border backdrop-blur-md transition-transform hover:scale-[1.02]`}>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-sm">{s.icon}</span>
+                  <p className="text-xs font-bold text-white truncate">{s.title}</p>
                 </div>
-                <div>
-                  <p className="text-xs font-bold text-white leading-tight">Dr. Emily Williams</p>
-                  <p className="text-[10px] text-cyan-400">Cardiology Specialist</p>
-                </div>
+                <p className="text-[10px] text-slate-400 mt-0.5 truncate">{s.desc}</p>
               </div>
-              <div className="flex items-center justify-between text-[11px] text-slate-300 pt-1 border-t border-slate-800">
-                <span>Fee: <strong className="text-white">₹800</strong></span>
-                <span className="text-amber-400 font-bold">★ 4.9 (1.2k)</span>
-              </div>
-            </div>
+            ))}
+          </div>
 
-            <div className="bg-[#0b1b33]/70 backdrop-blur-xl border border-emerald-500/20 rounded-2xl p-3.5 shadow-lg flex flex-col justify-between">
-              <div>
-                <span className="text-[10px] uppercase font-bold text-emerald-400 tracking-wider">AI Diagnostic Engine</span>
-                <p className="text-sm font-extrabold text-white mt-1">99.4% Accuracy</p>
-                <p className="text-[10px] text-slate-400 mt-0.5">ADA & Framingham Models</p>
-              </div>
-              <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden mt-2">
-                <div className="bg-gradient-to-r from-cyan-400 to-emerald-400 h-full w-[94%]" />
-              </div>
+          {/* Card 3: Patient Testimonial Quote */}
+          <div className="p-3 rounded-xl bg-[#07172b]/90 border border-slate-700/60 backdrop-blur-sm flex items-start gap-3">
+            <div className="h-8 w-8 rounded-full bg-teal-500/20 flex items-center justify-center shrink-0 text-teal-300 font-bold text-xs">
+              PS
+            </div>
+            <div>
+              <p className="text-xs text-slate-200 italic leading-relaxed">
+                "Found a top-rated cardiologist in minutes and had my digital prescription delivered to my phone right away."
+              </p>
+              <p className="text-[10px] text-teal-400 font-semibold mt-1">
+                — Priya S. • <span className="text-slate-400">Verified Patient Review (5.0★)</span>
+              </p>
             </div>
           </div>
         </div>
 
-        {/* Bottom Metrics Bar */}
-        <div className="relative z-10 grid grid-cols-4 gap-3">
+        {/* Bottom Care Impact Metrics */}
+        <div className="relative z-10 grid grid-cols-4 gap-2.5">
           {[
-            { label: 'Active Patients', value: '12,400+' },
+            { label: 'Happy Patients', value: '12,400+' },
             { label: 'Verified Doctors', value: '340+' },
-            { label: 'Telehealth Consults', value: '98,000+' },
-            { label: 'Care Rating', value: '4.9★' },
+            { label: 'Avg Connect Time', value: '15 Mins' },
+            { label: 'Patient Rating', value: '4.9★' },
           ].map(({ label, value }) => (
-            <div key={label} className="bg-[#071325]/80 border border-slate-800/80 backdrop-blur-md rounded-xl p-3 text-center">
-              <p className="text-base font-extrabold text-white">{value}</p>
-              <p className="text-slate-400 text-[10px] font-medium mt-0.5 leading-tight">{label}</p>
+            <div key={label} className="bg-[#07172b]/80 border border-slate-800 backdrop-blur-md rounded-xl p-2.5 text-center">
+              <p className="text-sm xl:text-base font-extrabold text-white">{value}</p>
+              <p className="text-slate-400 text-[10px] font-medium mt-0.5 truncate">{label}</p>
             </div>
           ))}
         </div>
@@ -363,11 +362,14 @@ export default function Login() {
       <div className="flex-1 flex flex-col items-center justify-center p-6 sm:p-12 max-w-xl mx-auto w-full">
         <div className="w-full max-w-sm">
           {/* Mobile brand */}
-          <div className="flex items-center gap-2 mb-8 lg:hidden">
-            <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-md shadow-cyan-500/20">
+          <div className="flex items-center gap-2.5 mb-8 lg:hidden">
+            <div className="h-10 w-10 rounded-2xl bg-gradient-to-br from-teal-400 to-blue-600 flex items-center justify-center shadow-lg shadow-teal-500/25">
               <Activity className="h-5 w-5 text-white" />
             </div>
-            <span className="font-bold text-lg text-[var(--text-primary)]">HealthSync</span>
+            <div>
+              <span className="font-extrabold text-lg text-[var(--text-primary)]">HealthSync</span>
+              <p className="text-[10px] text-teal-500 font-bold uppercase tracking-wider">Clinical Care Portal</p>
+            </div>
           </div>
 
           <h1 className="text-2xl font-bold text-[var(--text-primary)]">Welcome back</h1>
