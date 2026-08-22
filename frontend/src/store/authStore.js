@@ -46,7 +46,12 @@ export const useAuthStore = create(
             set({ user: data.data });
           }
           return data.data;
-        } catch { return null; }
+        } catch {
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('refreshToken');
+          set({ user: null, accessToken: null, refreshToken: null, isAuthenticated: false });
+          return null;
+        }
       },
 
       setUser: (user) => set({ user }),

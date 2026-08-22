@@ -10,20 +10,20 @@ import PostVisitModal from './PostVisitModal';
 import AppointmentDetailModal from '../patient/AppointmentDetailModal';
 import api from '@/lib/api';
 import { formatTime, formatDate } from '@/lib/utils';
-import { Clock, CheckCircle, Eye, FileEdit, CalendarDays } from 'lucide-react';
+import { Clock, CheckCircle, Eye, FileEdit, CalendarDays, RefreshCw } from 'lucide-react';
 import { format } from 'date-fns';
 
 export default function TodaySchedule() {
   const [selected, setSelected] = useState(null);
   const [postVisit, setPostVisit] = useState(null);
 
-  const { data: appointments = [], isLoading } = useQuery({
+  const { data: appointments = [], isLoading, isFetching, refetch } = useQuery({
     queryKey: ['today-schedule'],
     queryFn: async () => {
       const { data } = await api.get('/doctor/schedule/today');
       return data.data;
     },
-    refetchInterval: 60_000,
+    refetchOnWindowFocus: false,
   });
 
   return (
@@ -36,9 +36,20 @@ export default function TodaySchedule() {
               {format(new Date(), 'EEEE, MMMM d, yyyy')}
             </p>
           </div>
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-brand-50 dark:bg-brand-500/10 text-brand-700 dark:text-brand-300 text-sm font-medium">
-            <CalendarDays className="h-4 w-4" />
-            {appointments.length} appointments
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => refetch()}
+              disabled={isFetching}
+              title="Refresh schedule"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[var(--bg-tertiary)] hover:bg-[var(--border)] text-[var(--text-secondary)] text-sm font-medium transition-colors disabled:opacity-50"
+            >
+              <RefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin text-brand-500' : ''}`} />
+              Refresh
+            </button>
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-brand-50 dark:bg-brand-500/10 text-brand-700 dark:text-brand-300 text-sm font-medium">
+              <CalendarDays className="h-4 w-4" />
+              {appointments.length} appointments
+            </div>
           </div>
         </div>
 

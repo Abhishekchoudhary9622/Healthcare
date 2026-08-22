@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card, CardContent } from '@/components/ui/Card';
@@ -15,15 +16,16 @@ import {
 } from 'recharts';
 import { format, subDays } from 'date-fns';
 
-const lineData = Array.from({ length: 14 }, (_, i) => ({
-  day: format(subDays(new Date(), 13 - i), 'MMM d'),
-  appointments: Math.floor(Math.random() * 20 + 5),
-  patients: Math.floor(Math.random() * 10 + 2),
-}));
-
+const APPT_SERIES = [12, 18, 15, 22, 19, 25, 21, 24, 28, 20, 26, 23, 27, 25];
+const PATIENT_SERIES = [5, 8, 6, 9, 7, 10, 8, 9, 11, 8, 10, 9, 11, 10];
 const PIE_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444'];
 
 export default function AdminDashboard() {
+  const lineData = useMemo(() => Array.from({ length: 14 }, (_, i) => ({
+    day: format(subDays(new Date(), 13 - i), 'MMM d'),
+    appointments: APPT_SERIES[i % APPT_SERIES.length],
+    patients: PATIENT_SERIES[i % PATIENT_SERIES.length],
+  })), []);
   const { data, isLoading } = useQuery({
     queryKey: ['admin-dashboard'],
     queryFn: async () => {

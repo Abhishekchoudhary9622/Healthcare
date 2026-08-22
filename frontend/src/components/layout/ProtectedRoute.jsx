@@ -14,7 +14,7 @@ export default function ProtectedRoute({ children, role }) {
   if (!isAuthenticated || !user) return <Navigate to="/login" replace />;
 
   if (role && user.role !== role) {
-    const portals = { PATIENT: '/patient', DOCTOR: '/doctor', ADMIN: '/admin' };
+    const portals = { PATIENT: '/patient', DOCTOR: '/doctor', ADMIN: '/admin', DRIVER: '/driver' };
     return <Navigate to={portals[user.role] || '/login'} replace />;
   }
 

@@ -23,7 +23,7 @@ export default function Login() {
     try {
       const user = await login(email, password);
       toast({ type: 'success', title: 'Welcome back!', message: `Logged in as ${user.firstName}` });
-      const routes = { PATIENT: '/patient', DOCTOR: '/doctor', ADMIN: '/admin' };
+      const routes = { PATIENT: '/patient', DOCTOR: '/doctor', ADMIN: '/admin', DRIVER: '/driver' };
       navigate(routes[user.role] || '/');
     } catch (err) {
       toast({ type: 'error', title: 'Login failed', message: err.response?.data?.message || 'Invalid credentials' });

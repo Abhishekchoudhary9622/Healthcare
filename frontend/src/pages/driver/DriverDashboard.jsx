@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import { PageSpinner } from '@/components/ui/Spinner';
 import { useAuthStore } from '@/store/authStore';
 import api from '@/lib/api';
-import { Navigation, MapPin, CheckCircle, XCircle, Phone, User, Siren, Clock } from 'lucide-react';
+import { Navigation, MapPin, Phone, User, Siren, RefreshCw } from 'lucide-react';
 import { useToast } from '@/components/ui/Toast';
 
 export default function DriverDashboard() {
@@ -15,16 +15,17 @@ export default function DriverDashboard() {
   
   // To handle the demo flow, we keep local state for active trip
   const [activeTrip, setActiveTrip] = useState(null);
+  const [autoRefresh, setAutoRefresh] = useState(false);
 
-  // Poll for incoming requests
-  const { data: requests, isLoading } = useQuery({
+  // Poll for incoming requests only when enabled and no active trip
+  const { data: requests = [], isLoading, isFetching, refetch } = useQuery({
     queryKey: ['ambulance-requests'],
     queryFn: async () => {
       const { data } = await api.get('/ambulances/requests');
-      return data.data;
+      return data?.data || [];
     },
-    refetchInterval: 3000, // Poll every 3s
-    enabled: !activeTrip
+    refetchInterval: autoRefresh && !activeTrip ? 5000 : false,
+    enabled: !activeTrip && !!user
   });
 
   const acceptMutation = useMutation({
@@ -59,7 +60,7 @@ export default function DriverDashboard() {
     updateStatusMutation.mutate({ id: activeTrip._id, payload });
   };
 
-  if (isLoading && !activeTrip) return <div className="min-h-screen bg-slate-900 flex items-center justify-center"><PageSpinner /></div>;
+  if (isLoading && !requests.length && !activeTrip) return <div className="min-h-screen bg-slate-900 flex items-center justify-center"><PageSpinner /></div>;
 
   return (
     <div className="min-h-screen bg-slate-900 text-white font-sans selection:bg-brand-500/30">
@@ -81,7 +82,28 @@ export default function DriverDashboard() {
               </p>
             </div>
           </div>
-          <button onClick={logout} className="text-slate-400 hover:text-white text-sm bg-slate-800 px-3 py-1.5 rounded-lg">Logout</button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => refetch()}
+              disabled={isFetching}
+              title="Refresh requests"
+              className="text-slate-400 hover:text-white bg-slate-800 p-2 rounded-lg transition-colors disabled:opacity-50"
+            >
+              <RefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin text-emerald-400' : ''}`} />
+            </button>
+            <button
+              onClick={() => setAutoRefresh(prev => !prev)}
+              className={`text-xs px-2.5 py-1.5 rounded-lg border font-medium transition-colors ${
+                autoRefresh
+                  ? 'bg-emerald-950/60 border-emerald-500/50 text-emerald-300'
+                  : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-slate-200'
+              }`}
+              title="Toggle Auto Refresh"
+            >
+              Auto: {autoRefresh ? 'ON' : 'OFF'}
+            </button>
+            <button onClick={logout} className="text-slate-400 hover:text-white text-sm bg-slate-800 px-3 py-1.5 rounded-lg">Logout</button>
+          </div>
         </div>
       </header>
 

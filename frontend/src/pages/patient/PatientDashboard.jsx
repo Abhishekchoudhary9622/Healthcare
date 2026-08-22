@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import AppointmentCard from '@/components/shared/AppointmentCard';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
@@ -15,12 +15,8 @@ import {
 import { AreaChart, Area, XAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { format, subDays } from 'date-fns';
 
-const chartData = Array.from({ length: 7 }, (_, i) => ({
-  day: format(subDays(new Date(), 6 - i), 'EEE'),
-  appointments: Math.floor(Math.random() * 3),
-}));
-
 export default function PatientDashboard() {
+  const navigate = useNavigate();
   const { user } = useAuthStore();
 
   const { data: aptData, isLoading: loadingApts } = useQuery({
@@ -234,7 +230,7 @@ export default function PatientDashboard() {
                     appointment={apt}
                     role="PATIENT"
                     compact
-                    onView={(a) => window.location.href = `/patient/appointments`}
+                    onView={() => navigate('/patient/appointments')}
                   />
                 ))}
                 {appointments.length === 0 && (

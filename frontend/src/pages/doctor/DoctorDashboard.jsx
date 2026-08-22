@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import StatCard from '@/components/shared/StatCard';
@@ -18,13 +19,14 @@ import Button from '@/components/ui/Button';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { format, subDays } from 'date-fns';
 
-const weekData = Array.from({ length: 7 }, (_, i) => ({
-  day: format(subDays(new Date(), 6 - i), 'EEE'),
-  patients: Math.floor(Math.random() * 10 + 2),
-}));
+const PATIENT_COUNTS = [4, 7, 5, 8, 6, 9, 7];
 
 export default function DoctorDashboard() {
   const { user } = useAuthStore();
+  const weekData = useMemo(() => Array.from({ length: 7 }, (_, i) => ({
+    day: format(subDays(new Date(), 6 - i), 'EEE'),
+    patients: PATIENT_COUNTS[i % PATIENT_COUNTS.length],
+  })), []);
 
   const { data, isLoading } = useQuery({
     queryKey: ['doctor-dashboard'],

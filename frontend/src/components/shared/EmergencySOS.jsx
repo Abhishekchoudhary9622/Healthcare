@@ -30,15 +30,21 @@ export default function EmergencySOS() {
     enabled: mode === 'AMBULANCE' && !!location
   });
 
-  // Track Active Trip
+  // Track Active Trip - only poll when modal is open and trip is in-progress
   const { data: trip } = useQuery({
     queryKey: ['ambulance-trip', activeTripId],
     queryFn: async () => {
       const { data } = await api.get(`/ambulances/trip/${activeTripId}`);
       return data.data;
     },
-    refetchInterval: 2000, // Poll every 2 seconds for live updates
-    enabled: !!activeTripId
+    refetchInterval: (query) => {
+      const status = query.state.data?.status;
+      if (!activeTripId || !isOpen || status === 'COMPLETED' || status === 'CANCELLED') {
+        return false;
+      }
+      return 3000;
+    },
+    enabled: !!activeTripId && isOpen
   });
 
   const bookAmbulance = useMutation({
