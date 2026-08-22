@@ -208,48 +208,55 @@ export default function TelemedicineRoom() {
           </div>
         </div>
 
-        {/* Doctor Selector & End Call */}
+        {/* Doctor Selector (Patient only) & End Call */}
         <div className="flex items-center gap-3">
-          {/* Doctor Call Selector Dropdown */}
-          <div className="relative">
-            <button
-              onClick={() => setIsDoctorSelectOpen(!isDoctorSelectOpen)}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-teal-500/15 border border-teal-500/30 text-teal-300 text-xs font-semibold hover:bg-teal-500/25 transition-colors"
-            >
-              <Users className="h-3.5 w-3.5" />
-              <span>{isDoctor ? 'Patient View' : selectedDoctor.name.split(',')[0]}</span>
-              <ChevronDown className="h-3.5 w-3.5" />
-            </button>
+          {/* If Patient: Show Doctor Call Selector Dropdown */}
+          {!isDoctor ? (
+            <div className="relative">
+              <button
+                onClick={() => setIsDoctorSelectOpen(!isDoctorSelectOpen)}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-teal-500/15 border border-teal-500/30 text-teal-300 text-xs font-semibold hover:bg-teal-500/25 transition-colors"
+              >
+                <Users className="h-3.5 w-3.5" />
+                <span>{selectedDoctor.name.split(',')[0]}</span>
+                <ChevronDown className="h-3.5 w-3.5" />
+              </button>
 
-            {isDoctorSelectOpen && (
-              <div className="absolute right-0 mt-2 w-72 bg-slate-900 border border-slate-700 rounded-2xl p-2 shadow-2xl z-50 space-y-1">
-                <p className="text-[10px] font-bold text-slate-400 uppercase px-2.5 py-1">Select Doctor to Call</p>
-                {availableDoctors.map((d, idx) => {
-                  const dp = d.doctorProfile;
-                  const isSelected = selectedDoctor.lastName === d.lastName;
-                  return (
-                    <button
-                      key={idx}
-                      onClick={() => handleSelectDoctor(d)}
-                      className={cn(
-                        'w-full flex items-center justify-between p-2 rounded-xl text-left transition-colors text-xs',
-                        isSelected ? 'bg-teal-500/20 text-teal-200 font-bold' : 'hover:bg-slate-800 text-slate-300'
-                      )}
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <Avatar firstName={d.firstName} lastName={d.lastName} size="sm" />
-                        <div>
-                          <p className="font-semibold text-xs text-white">Dr. {d.firstName} {d.lastName}</p>
-                          <p className="text-[10px] text-slate-400">{dp?.specialisation || 'Specialist'} • ₹{dp?.consultationFee || 800}</p>
+              {isDoctorSelectOpen && (
+                <div className="absolute right-0 mt-2 w-72 bg-slate-900 border border-slate-700 rounded-2xl p-2 shadow-2xl z-50 space-y-1">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase px-2.5 py-1">Select Doctor to Call</p>
+                  {availableDoctors.map((d, idx) => {
+                    const dp = d.doctorProfile;
+                    const isSelected = selectedDoctor.lastName === d.lastName;
+                    return (
+                      <button
+                        key={idx}
+                        onClick={() => handleSelectDoctor(d)}
+                        className={cn(
+                          'w-full flex items-center justify-between p-2 rounded-xl text-left transition-colors text-xs',
+                          isSelected ? 'bg-teal-500/20 text-teal-200 font-bold' : 'hover:bg-slate-800 text-slate-300'
+                        )}
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <Avatar firstName={d.firstName} lastName={d.lastName} size="sm" />
+                          <div>
+                            <p className="font-semibold text-xs text-white">Dr. {d.firstName} {d.lastName}</p>
+                            <p className="text-[10px] text-slate-400">{dp?.specialisation || 'Specialist'} • ₹{dp?.consultationFee || 800}</p>
+                          </div>
                         </div>
-                      </div>
-                      {isSelected && <Check className="h-4 w-4 text-teal-400" />}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
+                        {isSelected && <Check className="h-4 w-4 text-teal-400" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-xs font-semibold">
+              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span>Doctor Console • In Session</span>
+            </div>
+          )}
 
           <Button
             variant="danger"
