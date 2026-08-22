@@ -46,18 +46,29 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[var(--bg-primary)] p-6">
-      <div className="w-full max-w-md">
-        <div className="flex items-center gap-2 mb-8">
-          <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-brand-500 to-violet-600 flex items-center justify-center">
-            <Activity className="h-5 w-5 text-white" />
+    <div className="min-h-screen flex items-center justify-center bg-[var(--bg-primary)] p-6 relative overflow-hidden">
+      <div className="absolute top-[-10%] left-[-10%] h-80 w-80 rounded-full bg-cyan-500/10 blur-[100px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] h-80 w-80 rounded-full bg-emerald-500/10 blur-[100px] pointer-events-none" />
+
+      <div className="w-full max-w-md relative z-10">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="h-10 w-10 rounded-2xl bg-gradient-to-tr from-cyan-500 to-blue-600 p-[1px] shadow-lg shadow-cyan-500/20">
+            <div className="h-full w-full bg-[#071326] rounded-2xl flex items-center justify-center">
+              <Activity className="h-5 w-5 text-cyan-400 animate-pulse" />
+            </div>
           </div>
-          <span className="font-bold text-lg text-[var(--text-primary)]">HealthSync</span>
+          <div>
+            <span className="font-extrabold text-lg text-[var(--text-primary)] tracking-tight">HealthSync</span>
+            <p className="text-[10px] text-cyan-500 font-semibold uppercase tracking-wider">Clinical Patient Portal</p>
+          </div>
         </div>
 
-        <div className="card p-6 shadow-xl">
-          <h1 className="text-xl font-bold text-[var(--text-primary)]">Create an account</h1>
-          <p className="mt-1 text-sm text-[var(--text-secondary)]">Join HealthSync to manage your healthcare and EHR</p>
+        <div className="card p-6 shadow-2xl border border-cyan-500/20">
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-[11px] font-semibold mb-3">
+            <ShieldCheck className="h-3 w-3" /> Encrypted Healthcare Account
+          </div>
+          <h1 className="text-xl font-bold text-[var(--text-primary)]">Create your account</h1>
+          <p className="mt-1 text-xs text-[var(--text-secondary)]">Join HealthSync to manage consultations, EHR records & vitals</p>
 
           {/* Social Google Sign-up Button */}
           <div className="mt-6">
