@@ -16,6 +16,7 @@ import PatientRecords   from '@/pages/patient/PatientRecords';
 import Pharmacies       from '@/pages/patient/Pharmacies';
 import Hospitals        from '@/pages/patient/Hospitals';
 import MLPrediction     from '@/pages/patient/MLPrediction';
+import TelemedicineLobby from '@/pages/patient/TelemedicineLobby';
 import TelemedicineRoom from '@/pages/shared/TelemedicineRoom';
 import DoctorDashboard    from '@/pages/doctor/DoctorDashboard';
 import DoctorAppointments from '@/pages/doctor/DoctorAppointments';
@@ -65,6 +66,7 @@ export default function App() {
         <Route path="/patient/hospitals"    element={<ProtectedRoute role="PATIENT"><Hospitals /></ProtectedRoute>} />
         <Route path="/patient/ml-prediction" element={<ProtectedRoute role="PATIENT"><MLPrediction /></ProtectedRoute>} />
         <Route path="/patient/appointments" element={<ProtectedRoute role="PATIENT"><MyAppointments /></ProtectedRoute>} />
+        <Route path="/patient/telemedicine" element={<ProtectedRoute role="PATIENT"><TelemedicineLobby /></ProtectedRoute>} />
         <Route path="/patient/profile"      element={<ProtectedRoute role="PATIENT"><PatientProfile /></ProtectedRoute>} />
         <Route path="/patient/analytics"    element={<ProtectedRoute role="PATIENT"><HealthAnalytics /></ProtectedRoute>} />
         <Route path="/patient/records"      element={<ProtectedRoute role="PATIENT"><PatientRecords /></ProtectedRoute>} />
@@ -75,6 +77,7 @@ export default function App() {
         <Route path="/doctor"              element={<ProtectedRoute role="DOCTOR"><DoctorDashboard /></ProtectedRoute>} />
         <Route path="/doctor/appointments" element={<ProtectedRoute role="DOCTOR"><DoctorAppointments /></ProtectedRoute>} />
         <Route path="/doctor/today"        element={<ProtectedRoute role="DOCTOR"><TodaySchedule /></ProtectedRoute>} />
+        <Route path="/doctor/telemedicine" element={<ProtectedRoute role="DOCTOR"><TelemedicineLobby /></ProtectedRoute>} />
         <Route path="/doctor/profile"      element={<ProtectedRoute role="DOCTOR"><DoctorProfile /></ProtectedRoute>} />
 
         <Route path="/admin"              element={<ProtectedRoute role="ADMIN"><AdminDashboard /></ProtectedRoute>} />

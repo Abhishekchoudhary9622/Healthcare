@@ -18,14 +18,14 @@ const navConfigs = {
     { label: 'EHR Medical Record',to: '/patient/records',       icon: ClipboardList },
     { label: 'Pharmacies',        to: '/patient/pharmacies',    icon: Store },
     { label: 'Appointments',      to: '/patient/appointments',  icon: Calendar },
-    { label: 'Telemedicine Visit',to: '/telemedicine/quick-room',icon: Video },
+    { label: 'Telemedicine Visit',to: '/patient/telemedicine',  icon: Video },
     { label: 'Profile',           to: '/patient/profile',       icon: UserCog },
   ],
   DOCTOR: [
     { label: 'Dashboard',         to: '/doctor',               icon: LayoutDashboard },
     { label: 'Appointments',      to: '/doctor/appointments',   icon: Calendar },
     { label: 'Today Schedule',    to: '/doctor/today',          icon: Activity },
-    { label: 'Telemedicine Room', to: '/telemedicine/quick-room',icon: Video },
+    { label: 'Telemedicine Room', to: '/doctor/telemedicine',   icon: Video },
     { label: 'Profile',           to: '/doctor/profile',        icon: UserCog },
   ],
   ADMIN: [
