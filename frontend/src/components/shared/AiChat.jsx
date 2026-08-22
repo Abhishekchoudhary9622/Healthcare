@@ -130,7 +130,7 @@ export default function AiChat() {
       <button
         onClick={() => setOpen(o => !o)}
         className={cn(
-          'fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full shadow-lg flex items-center justify-center',
+          'ai-chat-trigger fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full shadow-lg flex items-center justify-center',
           'bg-gradient-to-br from-brand-600 to-violet-600 text-white',
           'hover:shadow-xl hover:scale-105 active:scale-95',
           open && 'rotate-90'

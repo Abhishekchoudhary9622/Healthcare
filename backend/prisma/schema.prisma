@@ -64,8 +64,27 @@ model PatientProfile {
 
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   appointments Appointment[]
+  healthAssessments HealthAssessment[]
 
   @@map("patient_profiles")
+}
+
+model HealthAssessment {
+  id               String    @id @default(uuid())
+  patientProfileId String
+  symptoms         String?
+  vitals           String?   // JSON stringified vitals (e.g., {"bp":"120/80", "hr":"72"})
+  riskScore        Float     // 0-100
+  riskLevel        String    // LOW, MEDIUM, HIGH, CRITICAL
+  shapExplanations String?   // JSON stringified array of feature importance (SHAP-like)
+  recommendations  String?   // Text recommendations from AI
+  recommendedSpecialties String? // JSON stringified array of specialties
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  patient        PatientProfile @relation(fields: [patientProfileId], references: [id], onDelete: Cascade)
+
+  @@map("health_assessments")
 }
 
 model LeaveDay {

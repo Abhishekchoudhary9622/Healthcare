@@ -147,4 +147,51 @@ const saveMockPostVisit = async (id, notes, rxText) => {
   return summary;
 };
 
-module.exports = { generatePreVisitSummary, generatePostVisitSummary };
+const analyzeHealthRisk = async (patientData, symptoms, vitals) => {
+  try {
+    const prompt = `You are an advanced medical AI diagnostician. Analyze the following patient data, symptoms, and vitals to determine health risk.
+Respond ONLY with a valid JSON object. No markdown, no extra text.
+JSON Structure:
+{
+  "riskScore": (number from 0 to 100),
+  "riskLevel": "LOW", "MEDIUM", "HIGH", or "CRITICAL",
+  "shapExplanations": [
+    {"feature": "string description of a factor, e.g. 'Age > 50'", "impact": (number, positive increases risk, negative decreases risk)}
+  ],
+  "recommendations": "2-3 sentences of general medical advice or next steps",
+  "recommendedSpecialties": ["string array of recommended doctor specialties, e.g. 'Cardiologist', 'General Physician'"]
+}
+
+Patient Profile: ${JSON.stringify(patientData)}
+Symptoms: ${symptoms || "None reported"}
+Vitals: ${JSON.stringify(vitals || {})}`;
+
+    const raw = await callGemini(prompt);
+    const parsed = parseJSON(raw);
+
+    if (!parsed) {
+      throw new Error("Invalid JSON from Gemini");
+    }
+
+    // Default processing for the fields
+    return {
+      riskScore: typeof parsed.riskScore === 'number' ? parsed.riskScore : 50,
+      riskLevel: ["LOW", "MEDIUM", "HIGH", "CRITICAL"].includes(parsed.riskLevel) ? parsed.riskLevel : "MEDIUM",
+      shapExplanations: Array.isArray(parsed.shapExplanations) ? parsed.shapExplanations : [],
+      recommendations: parsed.recommendations || "Please consult a healthcare professional.",
+      recommendedSpecialties: Array.isArray(parsed.recommendedSpecialties) ? parsed.recommendedSpecialties : ["General Physician"]
+    };
+  } catch (e) {
+    logger.error("Gemini health risk analysis error: " + e.message);
+    // Fallback response
+    return {
+      riskScore: 50,
+      riskLevel: "MEDIUM",
+      shapExplanations: [{ feature: "Insufficient data for detailed analysis", impact: 0 }],
+      recommendations: "Please provide more details or consult a doctor.",
+      recommendedSpecialties: ["General Physician"]
+    };
+  }
+};
+
+module.exports = { generatePreVisitSummary, generatePostVisitSummary, analyzeHealthRisk };

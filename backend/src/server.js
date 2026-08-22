@@ -21,6 +21,11 @@ const appointmentRoutes = require('./routes/appointment.routes');
 const doctorRoutes      = require('./routes/doctor.routes');
 const calendarRoutes    = require('./routes/calendar.routes');
 const chatRoutes        = require('./routes/chat.routes');
+const assessmentRoutes  = require('./routes/assessment.routes');
+const recordsRoutes     = require('./routes/records.routes');
+const emergencyRoutes   = require('./routes/emergency.routes');
+const ambulanceRoutes   = require('./routes/ambulance.routes');
+const pharmacyRoutes    = require('./routes/pharmacy.routes');
 
 const app = express();
 
@@ -52,6 +57,11 @@ app.use('/api/appointments', appointmentRoutes);
 app.use('/api/doctor',       doctorRoutes);
 app.use('/api/calendar',     calendarRoutes);
 app.use('/api/chat',         chatRoutes);
+app.use('/api/assessments',  assessmentRoutes);
+app.use('/api/records',      recordsRoutes);
+app.use('/api/emergency',    emergencyRoutes);
+app.use('/api/ambulances',   ambulanceRoutes);
+app.use('/api/pharmacy',     pharmacyRoutes);
 
 // ── Health Check ──────────────────────────────────────────────────────────
 app.get('/health', (req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString(), db: 'mongodb', env: config.NODE_ENV }));

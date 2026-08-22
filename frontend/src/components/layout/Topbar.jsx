@@ -2,6 +2,7 @@ import { Menu, Sun, Moon, Monitor } from 'lucide-react';
 import { useThemeStore } from '@/store/themeStore';
 import { useAuthStore } from '@/store/authStore';
 import Avatar from '@/components/ui/Avatar';
+import EmergencySOS from '@/components/shared/EmergencySOS';
 import { cn } from '@/lib/utils';
 
 export default function Topbar({ onMenuClick, title }) {
@@ -31,6 +32,9 @@ export default function Topbar({ onMenuClick, title }) {
       )}
 
       <div className="flex-1" />
+
+      {/* Emergency SOS for Patients */}
+      {user?.role === 'PATIENT' && <EmergencySOS />}
 
       {/* Theme switcher */}
       <div className="flex items-center gap-0.5 p-1 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border)]">

@@ -5,14 +5,17 @@ import Avatar from '@/components/ui/Avatar';
 import {
   LayoutDashboard, Calendar, Users, UserCog, ClipboardList,
   Stethoscope, LogOut, ChevronRight, Activity, Bell, Settings,
-  FileText, UserPlus, Shield,
+  FileText, UserPlus, Shield, Store,
 } from 'lucide-react';
 
 const navConfigs = {
   PATIENT: [
-    { label: 'Dashboard',     to: '/patient',              icon: LayoutDashboard },
+    { label: 'Dashboard',     to: '/patient',               icon: LayoutDashboard },
     { label: 'Find Doctors',  to: '/patient/doctors',       icon: Stethoscope },
-    { label: 'My Appointments', to: '/patient/appointments', icon: Calendar },
+    { label: 'Pharmacies',    to: '/patient/pharmacies',    icon: Store },
+    { label: 'Appointments',  to: '/patient/appointments',  icon: Calendar },
+    { label: 'Medical Records', to: '/patient/records',     icon: ClipboardList },
+    { label: 'AI Analytics',  to: '/patient/analytics',     icon: Activity },
     { label: 'Profile',       to: '/patient/profile',       icon: UserCog },
   ],
   DOCTOR: [

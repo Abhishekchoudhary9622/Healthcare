@@ -2,9 +2,12 @@ import { useState } from 'react';
 import Sidebar from './Sidebar';
 import Topbar from './Topbar';
 import AiChat from '@/components/shared/AiChat';
+import EmergencySOS from '@/components/shared/EmergencySOS';
+import { useAuthStore } from '@/store/authStore';
 
 export default function DashboardLayout({ children, title }) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { user } = useAuthStore();
 
   return (
     <div className="flex min-h-screen bg-[var(--bg-primary)]">

@@ -11,6 +11,9 @@ import PatientDashboard from '@/pages/patient/PatientDashboard';
 import FindDoctors      from '@/pages/patient/FindDoctors';
 import MyAppointments   from '@/pages/patient/MyAppointments';
 import PatientProfile   from '@/pages/patient/PatientProfile';
+import HealthAnalytics  from '@/pages/patient/HealthAnalytics';
+import PatientRecords   from '@/pages/patient/PatientRecords';
+import Pharmacies       from '@/pages/patient/Pharmacies';
 import DoctorDashboard    from '@/pages/doctor/DoctorDashboard';
 import DoctorAppointments from '@/pages/doctor/DoctorAppointments';
 import TodaySchedule      from '@/pages/doctor/TodaySchedule';
@@ -20,11 +23,12 @@ import AdminDoctors      from '@/pages/admin/AdminDoctors';
 import AdminPatients     from '@/pages/admin/AdminPatients';
 import AdminAppointments from '@/pages/admin/AdminAppointments';
 import AddDoctor         from '@/pages/admin/AddDoctor';
+import DriverDashboard   from '@/pages/driver/DriverDashboard';
 
 function RootRedirect() {
   const { isAuthenticated, user } = useAuthStore();
   if (!isAuthenticated) return <Navigate to="/login" replace />;
-  const portals = { PATIENT: '/patient', DOCTOR: '/doctor', ADMIN: '/admin' };
+  const portals = { PATIENT: '/patient', DOCTOR: '/doctor', ADMIN: '/admin', DRIVER: '/driver' };
   return <Navigate to={portals[user?.role] || '/login'} replace />;
 }
 
@@ -57,6 +61,9 @@ export default function App() {
         <Route path="/patient/doctors"      element={<ProtectedRoute role="PATIENT"><FindDoctors /></ProtectedRoute>} />
         <Route path="/patient/appointments" element={<ProtectedRoute role="PATIENT"><MyAppointments /></ProtectedRoute>} />
         <Route path="/patient/profile"      element={<ProtectedRoute role="PATIENT"><PatientProfile /></ProtectedRoute>} />
+        <Route path="/patient/analytics"    element={<ProtectedRoute role="PATIENT"><HealthAnalytics /></ProtectedRoute>} />
+        <Route path="/patient/records"      element={<ProtectedRoute role="PATIENT"><PatientRecords /></ProtectedRoute>} />
+        <Route path="/patient/pharmacies"   element={<ProtectedRoute role="PATIENT"><Pharmacies /></ProtectedRoute>} />
 
         <Route path="/doctor"              element={<ProtectedRoute role="DOCTOR"><DoctorDashboard /></ProtectedRoute>} />
         <Route path="/doctor/appointments" element={<ProtectedRoute role="DOCTOR"><DoctorAppointments /></ProtectedRoute>} />
@@ -68,6 +75,8 @@ export default function App() {
         <Route path="/admin/doctors/new"  element={<ProtectedRoute role="ADMIN"><AddDoctor /></ProtectedRoute>} />
         <Route path="/admin/patients"     element={<ProtectedRoute role="ADMIN"><AdminPatients /></ProtectedRoute>} />
         <Route path="/admin/appointments" element={<ProtectedRoute role="ADMIN"><AdminAppointments /></ProtectedRoute>} />
+
+        <Route path="/driver" element={<ProtectedRoute role="DRIVER"><DriverDashboard /></ProtectedRoute>} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
