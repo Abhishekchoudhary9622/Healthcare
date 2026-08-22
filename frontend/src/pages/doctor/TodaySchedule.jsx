@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card, CardContent } from '@/components/ui/Card';
@@ -101,10 +102,19 @@ export default function TodaySchedule() {
                         )}
                       </div>
 
-                      <div className="flex gap-1.5 shrink-0">
+                      <div className="flex gap-2 shrink-0 items-center">
+                        {['CONFIRMED', 'PENDING', 'WAITING'].includes(apt.status) && (
+                          <Link to={`/telemedicine/consultation_${apt.id || apt._id}`}>
+                            <Button size="sm" className="bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-slate-950 font-bold shadow-md shadow-teal-500/20">
+                              <span className="h-2 w-2 rounded-full bg-slate-950 animate-ping mr-1.5 inline-block" />
+                              Start Video Visit
+                            </Button>
+                          </Link>
+                        )}
                         <button
                           onClick={() => setSelected(apt)}
                           className="h-8 w-8 flex items-center justify-center rounded-lg hover:bg-[var(--bg-tertiary)] text-[var(--text-muted)] hover:text-brand-500 transition-colors"
+                          title="View Details"
                         >
                           <Eye className="h-4 w-4" />
                         </button>

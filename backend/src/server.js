@@ -1,6 +1,8 @@
 require('dotenv').config();
 
 const express = require('express');
+const http = require('http');
+const { Server: SocketIOServer } = require('socket.io');
 const path = require('path');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -14,6 +16,7 @@ const logger = require('./config/logger');
 const connectDB = require('./config/db');
 const errorHandler = require('./middleware/errorHandler');
 const { startScheduler } = require('./jobs/scheduler');
+const { initSignalingSocket } = require('./sockets/signaling.socket');
 
 const authRoutes = require('./routes/auth.routes');
 const adminRoutes = require('./routes/admin.routes');
@@ -29,8 +32,10 @@ const pharmacyRoutes = require('./routes/pharmacy.routes');
 const hospitalRoutes = require('./routes/hospital.routes');
 const notificationRoutes = require('./routes/notification.routes');
 const telemedicineRoutes = require('./routes/telemedicine.routes');
+const consultationRoutes = require('./routes/consultation.routes');
 
 const app = express();
+const server = http.createServer(app);
 
 const allowedOrigins = [
   config.FRONTEND_URL,
@@ -42,19 +47,30 @@ const allowedOrigins = [
 
 const isAllowedOrigin = (origin) => {
   if (!origin) return true;
-
-  if (allowedOrigins.includes(origin)) {
-    return true;
-  }
-
-  if (
-    /^https:\/\/healthcare-frontend-[a-z0-9-]+-shell11\.vercel\.app$/.test(origin)
-  ) {
-    return true;
-  }
-
+  if (allowedOrigins.includes(origin)) return true;
+  if (/^https:\/\/healthcare-frontend-[a-z0-9-]+-shell11\.vercel\.app$/.test(origin)) return true;
   return false;
 };
+
+// Initialize Socket.IO with CORS
+const io = new SocketIOServer(server, {
+  cors: {
+    origin: (origin, callback) => {
+      if (isAllowedOrigin(origin)) {
+        callback(null, true);
+      } else {
+        callback(null, false);
+      }
+    },
+    credentials: true,
+    methods: ['GET', 'POST']
+  },
+  pingTimeout: 30000,
+  pingInterval: 10000
+});
+
+// Attach WebRTC Signaling Socket Engine
+initSignalingSocket(io);
 
 app.use(
   helmet({
@@ -76,11 +92,7 @@ app.use(
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: [
-      'Content-Type',
-      'Authorization',
-      'X-Requested-With'
-    ]
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
   })
 );
 
@@ -129,6 +141,7 @@ app.use(
   })
 );
 
+// Register API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/appointments', appointmentRoutes);
@@ -143,12 +156,14 @@ app.use('/api/pharmacy', pharmacyRoutes);
 app.use('/api/hospitals', hospitalRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/telemedicine', telemedicineRoutes);
+app.use('/api/consultation', consultationRoutes);
 
 app.get('/health', (req, res) => {
   res.json({
     status: 'ok',
     timestamp: new Date().toISOString(),
     db: 'mongodb',
+    realtime: 'socket.io',
     env: config.NODE_ENV
   });
 });
@@ -170,8 +185,7 @@ app.get('*', (req, res) => {
     res.sendFile(indexPath);
   } else {
     res.status(200).json({
-      message:
-        'HealthSync API is running. Build the frontend with: npm run build:ui',
+      message: 'HealthSync API is running. Build the frontend with: npm run build:ui',
       api: '/api/*',
       health: '/health'
     });
@@ -184,15 +198,15 @@ const start = async () => {
   try {
     await connectDB();
 
-    app.listen(config.PORT, '0.0.0.0', () => {
+    server.listen(config.PORT, '0.0.0.0', () => {
       logger.info(
-        `HealthSync running on port ${config.PORT} [${config.NODE_ENV}]`
+        `HealthSync HTTP & Socket.IO server running on port ${config.PORT} [${config.NODE_ENV}]`
       );
     });
 
     startScheduler();
   } catch (err) {
-    logger.error('Failed to start: ' + err.message);
+    logger.error('Failed to start server: ' + err.message);
     process.exit(1);
   }
 };
@@ -205,4 +219,4 @@ process.on('SIGTERM', async () => {
   process.exit(0);
 });
 
-module.exports = app;
+module.exports = { app, server, io };

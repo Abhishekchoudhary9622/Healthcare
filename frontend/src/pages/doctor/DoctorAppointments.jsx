@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import PostVisitModal from './PostVisitModal';
@@ -10,7 +11,7 @@ import { PageSpinner } from '@/components/ui/Spinner';
 import { useToast } from '@/components/ui/Toast';
 import { cn, formatDate, formatTime } from '@/lib/utils';
 import api from '@/lib/api';
-import { Calendar, Clock, FileEdit, Eye, Filter } from 'lucide-react';
+import { Calendar, Clock, FileEdit, Eye, Filter, Video } from 'lucide-react';
 import Input from '@/components/ui/Input';
 
 const STATUSES = ['All', 'CONFIRMED', 'PENDING', 'COMPLETED', 'CANCELLED'];
@@ -113,6 +114,15 @@ export default function DoctorAppointments() {
                           </td>
                           <td className="px-4 py-3">
                             <div className="flex items-center gap-1.5">
+                              {['CONFIRMED', 'PENDING', 'WAITING'].includes(apt.status) && (
+                                <Link
+                                  to={`/telemedicine/consultation_${apt.id || apt._id}`}
+                                  className="h-7 w-7 flex items-center justify-center rounded-lg bg-teal-500/20 text-teal-300 hover:bg-teal-500/30 transition-colors"
+                                  title="Join Live Video Visit"
+                                >
+                                  <Video className="h-4 w-4 text-teal-400" />
+                                </Link>
+                              )}
                               <button
                                 onClick={() => setSelected(apt)}
                                 className="h-7 w-7 flex items-center justify-center rounded-lg hover:bg-[var(--bg-tertiary)] text-[var(--text-muted)] hover:text-brand-500 transition-colors"

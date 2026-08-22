@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { formatDateTime, formatDate } from '@/lib/utils';
 import { StatusBadge, UrgencyBadge } from '@/components/ui/Badge';
 import Avatar from '@/components/ui/Avatar';
@@ -60,7 +61,15 @@ export default function AppointmentCard({ appointment, role = 'PATIENT', onView,
             )}
 
             {!compact && (
-              <div className="flex gap-2 mt-3">
+              <div className="flex flex-wrap items-center gap-2 mt-3">
+                {['CONFIRMED', 'PENDING', 'WAITING'].includes(status) && (
+                  <Link to={`/telemedicine/consultation_${appointment.id || appointment._id}`}>
+                    <Button size="sm" className="bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-slate-950 font-bold shadow-md shadow-teal-500/20">
+                      <span className="h-2 w-2 rounded-full bg-slate-950 animate-ping mr-1.5 inline-block" />
+                      Join Video Call
+                    </Button>
+                  </Link>
+                )}
                 {onView && (
                   <Button size="sm" variant="secondary" onClick={() => onView(appointment)}>
                     View Details
