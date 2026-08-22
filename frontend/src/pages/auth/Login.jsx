@@ -1,12 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { Activity, Mail, Lock, Eye, EyeOff, ArrowRight, Phone, KeyRound, Sparkles, CheckCircle2, ArrowLeft } from 'lucide-react';
+import { Activity, Mail, Lock, Eye, EyeOff, ArrowRight, Phone, KeyRound, CheckCircle2, ArrowLeft, ShieldCheck, RefreshCw } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { useToast } from '@/components/ui/Toast';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Modal from '@/components/ui/Modal';
+import GoogleAuthModal from '@/components/shared/GoogleAuthModal';
 import api from '@/lib/api';
 import { cn } from '@/lib/utils';
 
@@ -18,24 +19,38 @@ export default function Login() {
   const [authMethod, setAuthMethod] = useState('EMAIL'); // 'EMAIL' | 'PHONE'
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isGoogleModalOpen, setIsGoogleModalOpen] = useState(false);
 
-  // Phone OTP Login States
+  // Phone OTP States
   const [phone, setPhone] = useState('');
-  const [otp, setOtp] = useState('');
+  const [otpDigits, setOtpDigits] = useState(['', '', '', '', '', '']);
   const [otpSent, setOtpSent] = useState(false);
   const [phoneLoading, setPhoneLoading] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
   const [debugOtp, setDebugOtp] = useState('');
 
   // Forgot Password Modal States
   const [forgotModalOpen, setForgotModalOpen] = useState(false);
-  const [forgotStep, setForgotStep] = useState(1); // 1 = Enter Email, 2 = Enter OTP & New Password
+  const [forgotStep, setForgotStep] = useState(1);
   const [forgotEmail, setForgotEmail] = useState('');
-  const [forgotOtp, setForgotOtp] = useState('');
+  const [forgotOtpDigits, setForgotOtpDigits] = useState(['', '', '', '', '', '']);
   const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [forgotLoading, setForgotLoading] = useState(false);
   const [forgotDebugOtp, setForgotDebugOtp] = useState('');
 
+  const otpInputsRef = useRef([]);
+  const forgotOtpInputsRef = useRef([]);
+
   const { register, handleSubmit, formState: { errors } } = useForm();
+
+  // Cooldown countdown timer
+  useEffect(() => {
+    if (cooldown > 0) {
+      const timer = setTimeout(() => setCooldown(c => c - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [cooldown]);
 
   const navigateByRole = (user) => {
     const routes = { PATIENT: '/patient', DOCTOR: '/doctor', ADMIN: '/admin', DRIVER: '/driver' };
@@ -56,19 +71,36 @@ export default function Login() {
     }
   };
 
+  // Google OAuth account selection handler
+  const handleGoogleAccountSelected = async (googleUser) => {
+    setLoading(true);
+    try {
+      const user = await loginWithGoogle(googleUser);
+      setIsGoogleModalOpen(false);
+      toast({ type: 'success', title: 'Google Sign-In Successful', message: `Welcome, ${user.firstName}!` });
+      navigateByRole(user);
+    } catch (err) {
+      toast({ type: 'error', title: 'Google authentication failed', message: err.response?.data?.message || 'Please try again' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Send Phone OTP
   const handleSendPhoneOtp = async () => {
-    if (!phone || phone.length < 8) {
-      return toast({ type: 'error', title: 'Invalid Phone', message: 'Please enter a valid phone number' });
+    if (!phone || phone.length < 10) {
+      return toast({ type: 'error', title: 'Invalid Phone Number', message: 'Please enter a valid 10-digit mobile number' });
     }
     setPhoneLoading(true);
     try {
       const res = await api.post('/auth/send-otp', { phone });
       setOtpSent(true);
+      setCooldown(30); // 30 seconds resend cooldown
+      setOtpDigits(['', '', '', '', '', '']);
       if (res.data.data?.debugOtp) {
         setDebugOtp(res.data.data.debugOtp);
       }
-      toast({ type: 'success', title: 'OTP Sent', message: 'Verification code sent to your phone' });
+      toast({ type: 'success', title: 'OTP Dispatched', message: 'Verification code sent to your phone' });
     } catch (err) {
       toast({ type: 'error', title: 'Error sending OTP', message: err.response?.data?.message || 'Failed to send OTP' });
     } finally {
@@ -76,46 +108,55 @@ export default function Login() {
     }
   };
 
+  // Handle individual digit typing for Phone OTP
+  const handleOtpChange = (index, value) => {
+    if (value.length > 1) {
+      // Paste support
+      const pasted = value.replace(/[^0-9]/g, '').slice(0, 6).split('');
+      const nextDigits = [...otpDigits];
+      pasted.forEach((char, i) => {
+        if (index + i < 6) nextDigits[index + i] = char;
+      });
+      setOtpDigits(nextDigits);
+      const nextFocus = Math.min(5, index + pasted.length);
+      otpInputsRef.current[nextFocus]?.focus();
+      return;
+    }
+
+    const nextDigits = [...otpDigits];
+    nextDigits[index] = value.replace(/[^0-9]/g, '');
+    setOtpDigits(nextDigits);
+
+    if (value && index < 5) {
+      otpInputsRef.current[index + 1]?.focus();
+    }
+  };
+
+  const handleOtpKeyDown = (index, e) => {
+    if (e.key === 'Backspace' && !otpDigits[index] && index > 0) {
+      otpInputsRef.current[index - 1]?.focus();
+    }
+  };
+
   // Verify Phone OTP
   const handleVerifyPhoneOtp = async () => {
-    if (!otp || otp.length < 4) {
-      return toast({ type: 'error', title: 'Invalid Code', message: 'Please enter the verification code' });
+    const fullOtp = otpDigits.join('');
+    if (fullOtp.length < 6) {
+      return toast({ type: 'error', title: 'Incomplete Code', message: 'Please enter the 6-digit OTP' });
     }
     setPhoneLoading(true);
     try {
-      const user = await loginWithPhoneOtp(phone, otp);
-      toast({ type: 'success', title: 'Welcome!', message: `Logged in as ${user.firstName}` });
+      const user = await loginWithPhoneOtp(phone, fullOtp);
+      toast({ type: 'success', title: 'Verified Successfully', message: `Welcome, ${user.firstName}!` });
       navigateByRole(user);
     } catch (err) {
-      toast({ type: 'error', title: 'Verification failed', message: err.response?.data?.message || 'Invalid OTP' });
+      toast({ type: 'error', title: 'Verification failed', message: err.response?.data?.message || 'Invalid or expired OTP' });
     } finally {
       setPhoneLoading(false);
     }
   };
 
-  // Google OAuth Login
-  const handleGoogleLogin = async () => {
-    setLoading(true);
-    try {
-      // In production with Google OAuth Client ID, this receives token from Google OAuth provider
-      const googleUser = {
-        email: 'alex.morgan.health@gmail.com',
-        firstName: 'Alex',
-        lastName: 'Morgan',
-        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
-        googleId: 'google-oauth-10928374'
-      };
-      const user = await loginWithGoogle(googleUser);
-      toast({ type: 'success', title: 'Google Sign-In Successful', message: `Welcome ${user.firstName}!` });
-      navigateByRole(user);
-    } catch (err) {
-      toast({ type: 'error', title: 'Google login failed', message: err.response?.data?.message || 'Authentication error' });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Forgot Password - Step 1
+  // Forgot Password - Step 1: Send recovery OTP to email
   const handleRequestResetOtp = async () => {
     if (!forgotEmail || !forgotEmail.includes('@')) {
       return toast({ type: 'error', title: 'Invalid Email', message: 'Please enter a valid email address' });
@@ -124,10 +165,11 @@ export default function Login() {
     try {
       const res = await api.post('/auth/forgot-password', { email: forgotEmail });
       setForgotStep(2);
+      setForgotOtpDigits(['', '', '', '', '', '']);
       if (res.data.data?.debugOtp) {
         setForgotDebugOtp(res.data.data.debugOtp);
       }
-      toast({ type: 'success', title: 'Reset Code Sent', message: 'Check your email for the 6-digit recovery code' });
+      toast({ type: 'success', title: 'Recovery Code Sent', message: '6-digit reset code has been sent to your email' });
     } catch (err) {
       toast({ type: 'error', title: 'Error', message: err.response?.data?.message || 'Could not process request' });
     } finally {
@@ -135,19 +177,27 @@ export default function Login() {
     }
   };
 
-  // Forgot Password - Step 2
+  // Forgot Password - Step 2: Verify OTP and save new password
   const handleConfirmPasswordReset = async () => {
-    if (!forgotOtp || newPassword.length < 8) {
-      return toast({ type: 'error', title: 'Incomplete', message: 'Password must be at least 8 characters' });
+    const fullOtp = forgotOtpDigits.join('');
+    if (fullOtp.length < 6) {
+      return toast({ type: 'error', title: 'Incomplete Code', message: 'Please enter the 6-digit recovery code' });
     }
+    if (newPassword.length < 8) {
+      return toast({ type: 'error', title: 'Weak Password', message: 'Password must be at least 8 characters' });
+    }
+    if (newPassword !== confirmPassword) {
+      return toast({ type: 'error', title: 'Password Mismatch', message: 'Passwords do not match' });
+    }
+
     setForgotLoading(true);
     try {
       await api.post('/auth/reset-password', {
         email: forgotEmail,
-        otp: forgotOtp,
+        otp: fullOtp,
         newPassword
       });
-      toast({ type: 'success', title: 'Password Reset Complete', message: 'You can now sign in with your new password.' });
+      toast({ type: 'success', title: 'Password Updated', message: 'Your password has been reset. Please sign in.' });
       setForgotModalOpen(false);
       setForgotStep(1);
     } catch (err) {
@@ -194,7 +244,7 @@ export default function Login() {
         </div>
       </div>
 
-      {/* Right form */}
+      {/* Right form container */}
       <div className="flex-1 flex flex-col items-center justify-center p-6 sm:p-12 max-w-xl mx-auto w-full">
         <div className="w-full max-w-sm">
           {/* Mobile brand */}
@@ -212,12 +262,12 @@ export default function Login() {
           <div className="mt-6">
             <button
               type="button"
-              onClick={handleGoogleLogin}
+              onClick={() => setIsGoogleModalOpen(true)}
               disabled={loading}
-              className="w-full flex items-center justify-center gap-3 py-2.5 px-4 rounded-xl border border-[var(--border)] bg-[var(--bg-secondary)] hover:bg-[var(--bg-tertiary)] text-[var(--text-primary)] text-sm font-semibold shadow-sm transition-all hover:shadow"
+              className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-2xl border border-[var(--border)] bg-[var(--bg-secondary)] hover:bg-[var(--bg-tertiary)] text-[var(--text-primary)] text-sm font-semibold shadow-sm transition-all hover:shadow hover:border-brand-500/50"
             >
-              {/* Google G SVG */}
-              <svg className="h-4 w-4" viewBox="0 0 24 24">
+              {/* Google G Multi-Color SVG */}
+              <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24">
                 <path
                   fill="#4285F4"
                   d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -250,13 +300,13 @@ export default function Login() {
           </div>
 
           {/* Method Tabs: Email vs Phone */}
-          <div className="flex p-1 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border)] mb-6 text-xs font-semibold">
+          <div className="flex p-1 rounded-2xl bg-[var(--bg-tertiary)] border border-[var(--border)] mb-6 text-xs font-semibold">
             <button
               type="button"
               onClick={() => setAuthMethod('EMAIL')}
               className={cn(
-                'flex-1 py-2 rounded-lg transition-colors flex items-center justify-center gap-1.5',
-                authMethod === 'EMAIL' ? 'bg-[var(--bg-secondary)] text-[var(--text-primary)] shadow-sm' : 'text-[var(--text-muted)]'
+                'flex-1 py-2.5 rounded-xl transition-all flex items-center justify-center gap-1.5',
+                authMethod === 'EMAIL' ? 'bg-[var(--bg-secondary)] text-[var(--text-primary)] shadow-sm' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
               )}
             >
               <Mail className="h-3.5 w-3.5" /> Email & Password
@@ -265,8 +315,8 @@ export default function Login() {
               type="button"
               onClick={() => setAuthMethod('PHONE')}
               className={cn(
-                'flex-1 py-2 rounded-lg transition-colors flex items-center justify-center gap-1.5',
-                authMethod === 'PHONE' ? 'bg-[var(--bg-secondary)] text-[var(--text-primary)] shadow-sm' : 'text-[var(--text-muted)]'
+                'flex-1 py-2.5 rounded-xl transition-all flex items-center justify-center gap-1.5',
+                authMethod === 'PHONE' ? 'bg-[var(--bg-secondary)] text-[var(--text-primary)] shadow-sm' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
               )}
             >
               <Phone className="h-3.5 w-3.5" /> Phone & OTP
@@ -315,7 +365,7 @@ export default function Login() {
                 {errors.password && <p className="text-xs text-danger-500">{errors.password.message}</p>}
               </div>
 
-              <Button type="submit" loading={loading} className="w-full" size="lg" iconRight={ArrowRight}>
+              <Button type="submit" loading={loading} className="w-full h-11" size="lg" iconRight={ArrowRight}>
                 Sign in
               </Button>
             </form>
@@ -327,24 +377,25 @@ export default function Login() {
               {!otpSent ? (
                 <div className="space-y-4">
                   <div className="space-y-1.5">
-                    <label className="block text-sm font-medium text-[var(--text-secondary)]">Phone Number</label>
+                    <label className="block text-sm font-medium text-[var(--text-secondary)]">Mobile Phone Number</label>
                     <div className="relative">
                       <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--text-muted)] pointer-events-none" />
                       <input
                         type="tel"
-                        placeholder="+91 98765 43210"
+                        placeholder="9876543210 or +91 9876543210"
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
                         className="input-base pl-10"
                       />
                     </div>
+                    <p className="text-[11px] text-[var(--text-muted)]">We will send a 6-digit OTP code to verify your mobile number.</p>
                   </div>
 
                   <Button
                     type="button"
                     onClick={handleSendPhoneOtp}
                     loading={phoneLoading}
-                    className="w-full bg-brand-600 text-white font-bold"
+                    className="w-full h-11 bg-brand-600 text-white font-bold"
                     size="lg"
                     iconRight={ArrowRight}
                   >
@@ -353,32 +404,50 @@ export default function Login() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <div className="p-3 bg-brand-50 dark:bg-brand-500/10 rounded-xl border border-brand-200 dark:border-brand-900/50 flex items-center justify-between text-xs">
+                  <div className="p-3 bg-brand-50 dark:bg-brand-500/10 rounded-2xl border border-brand-200 dark:border-brand-900/50 flex items-center justify-between text-xs">
                     <div>
                       <p className="font-semibold text-brand-700 dark:text-brand-300">Code sent to {phone}</p>
-                      {debugOtp && <p className="text-[10px] text-brand-600 font-mono mt-0.5">Code: {debugOtp}</p>}
+                      {debugOtp && <p className="text-[10px] text-brand-600 font-mono mt-0.5 font-bold">Auto-Test Code: {debugOtp}</p>}
                     </div>
                     <button
                       type="button"
                       onClick={() => setOtpSent(false)}
-                      className="text-brand-600 font-bold hover:underline"
+                      className="text-brand-600 dark:text-brand-400 font-bold hover:underline"
                     >
                       Change
                     </button>
                   </div>
 
-                  <div className="space-y-1.5">
-                    <label className="block text-sm font-medium text-[var(--text-secondary)]">Enter 6-Digit OTP</label>
-                    <div className="relative">
-                      <KeyRound className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--text-muted)] pointer-events-none" />
-                      <input
-                        type="text"
-                        maxLength="6"
-                        placeholder="123456"
-                        value={otp}
-                        onChange={(e) => setOtp(e.target.value)}
-                        className="input-base pl-10 tracking-widest text-center text-base font-bold font-mono"
-                      />
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="block text-sm font-medium text-[var(--text-secondary)]">Enter 6-Digit Code</label>
+                      {cooldown > 0 ? (
+                        <span className="text-[11px] text-[var(--text-muted)] font-medium">Resend in {cooldown}s</span>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={handleSendPhoneOtp}
+                          className="text-[11px] text-brand-600 dark:text-brand-400 font-bold hover:underline flex items-center gap-1"
+                        >
+                          <RefreshCw className="h-3 w-3" /> Resend OTP
+                        </button>
+                      )}
+                    </div>
+
+                    {/* 6 Individual Digit Inputs */}
+                    <div className="flex justify-between gap-2">
+                      {otpDigits.map((digit, idx) => (
+                        <input
+                          key={idx}
+                          ref={el => otpInputsRef.current[idx] = el}
+                          type="text"
+                          maxLength="1"
+                          value={digit}
+                          onChange={(e) => handleOtpChange(idx, e.target.value)}
+                          onKeyDown={(e) => handleOtpKeyDown(idx, e)}
+                          className="h-12 w-11 text-center font-mono font-bold text-lg rounded-xl border border-[var(--border)] bg-[var(--bg-secondary)] text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 shadow-sm"
+                        />
+                      ))}
                     </div>
                   </div>
 
@@ -386,7 +455,7 @@ export default function Login() {
                     type="button"
                     onClick={handleVerifyPhoneOtp}
                     loading={phoneLoading}
-                    className="w-full bg-brand-600 text-white font-bold"
+                    className="w-full h-11 bg-brand-600 text-white font-bold"
                     size="lg"
                     icon={CheckCircle2}
                   >
@@ -406,13 +475,21 @@ export default function Login() {
         </div>
       </div>
 
+      {/* Google Account Chooser Modal (Identical to user's requested Google view) */}
+      <GoogleAuthModal
+        isOpen={isGoogleModalOpen}
+        onClose={() => setIsGoogleModalOpen(false)}
+        onSelectAccount={handleGoogleAccountSelected}
+        loading={loading}
+      />
+
       {/* Forgot Password Reset Modal */}
       <Modal open={forgotModalOpen} onClose={() => setForgotModalOpen(false)} title="Reset Password" size="sm">
         <div className="p-6 space-y-4 text-xs">
           {forgotStep === 1 ? (
             <div className="space-y-4">
               <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
-                Enter your registered email address and we'll send you a 6-digit recovery code to reset your password.
+                Enter your registered email address and we'll send a 6-digit recovery code to reset your account password.
               </p>
               <div>
                 <label className="block font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">Email Address</label>
@@ -434,27 +511,37 @@ export default function Login() {
                   loading={forgotLoading}
                   onClick={handleRequestResetOtp}
                 >
-                  Send Code
+                  Send Recovery Code
                 </Button>
               </div>
             </div>
           ) : (
             <div className="space-y-4">
-              <div className="p-3 bg-brand-50 dark:bg-brand-500/10 rounded-xl border border-brand-200 text-xs">
+              <div className="p-3 bg-brand-50 dark:bg-brand-500/10 rounded-2xl border border-brand-200 text-xs">
                 <p className="font-semibold text-brand-700 dark:text-brand-300">Code sent to {forgotEmail}</p>
-                {forgotDebugOtp && <p className="text-[10px] text-brand-600 font-mono mt-0.5">Code: {forgotDebugOtp}</p>}
+                {forgotDebugOtp && <p className="text-[10px] text-brand-600 font-mono mt-0.5 font-bold">Auto-Test Code: {forgotDebugOtp}</p>}
               </div>
 
               <div>
-                <label className="block font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">6-Digit Reset Code</label>
-                <input
-                  type="text"
-                  maxLength="6"
-                  placeholder="123456"
-                  value={forgotOtp}
-                  onChange={(e) => setForgotOtp(e.target.value)}
-                  className="input-base text-center font-mono font-bold tracking-widest"
-                />
+                <label className="block font-bold text-slate-700 dark:text-slate-300 uppercase mb-2">6-Digit Recovery Code</label>
+                <div className="flex justify-between gap-1.5">
+                  {forgotOtpDigits.map((digit, idx) => (
+                    <input
+                      key={idx}
+                      ref={el => forgotOtpInputsRef.current[idx] = el}
+                      type="text"
+                      maxLength="1"
+                      value={digit}
+                      onChange={(e) => {
+                        const next = [...forgotOtpDigits];
+                        next[idx] = e.target.value.replace(/[^0-9]/g, '');
+                        setForgotOtpDigits(next);
+                        if (e.target.value && idx < 5) forgotOtpInputsRef.current[idx + 1]?.focus();
+                      }}
+                      className="h-10 w-9 text-center font-mono font-bold text-base rounded-lg border border-[var(--border)] bg-[var(--bg-secondary)]"
+                    />
+                  ))}
+                </div>
               </div>
 
               <div>
@@ -464,6 +551,17 @@ export default function Login() {
                   placeholder="Min. 8 characters"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
+                  className="input-base"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">Confirm New Password</label>
+                <input
+                  type="password"
+                  placeholder="Re-enter new password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
                   className="input-base"
                 />
               </div>
