@@ -3,6 +3,7 @@ import { useThemeStore } from '@/store/themeStore';
 import { useAuthStore } from '@/store/authStore';
 import Avatar from '@/components/ui/Avatar';
 import EmergencySOS from '@/components/shared/EmergencySOS';
+import NotificationDropdown from '@/components/shared/NotificationDropdown';
 import { cn } from '@/lib/utils';
 
 export default function Topbar({ onMenuClick, title }) {
@@ -17,7 +18,7 @@ export default function Topbar({ onMenuClick, title }) {
   ];
 
   return (
-    <header className="sticky top-0 z-30 h-16 bg-[var(--bg-secondary)] border-b border-[var(--border)] flex items-center px-4 gap-4">
+    <header className="sticky top-0 z-30 h-16 bg-[var(--bg-secondary)] border-b border-[var(--border)] flex items-center px-4 gap-3">
       {/* Mobile menu toggle */}
       <button
         onClick={onMenuClick}
@@ -35,6 +36,9 @@ export default function Topbar({ onMenuClick, title }) {
 
       {/* Emergency SOS for Patients */}
       {user?.role === 'PATIENT' && <EmergencySOS />}
+
+      {/* In-app Notification Bell */}
+      <NotificationDropdown />
 
       {/* Theme switcher */}
       <div className="flex items-center gap-0.5 p-1 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border)]">

@@ -26,6 +26,9 @@ const recordsRoutes = require('./routes/records.routes');
 const emergencyRoutes = require('./routes/emergency.routes');
 const ambulanceRoutes = require('./routes/ambulance.routes');
 const pharmacyRoutes = require('./routes/pharmacy.routes');
+const hospitalRoutes = require('./routes/hospital.routes');
+const notificationRoutes = require('./routes/notification.routes');
+const telemedicineRoutes = require('./routes/telemedicine.routes');
 
 const app = express();
 
@@ -137,6 +140,9 @@ app.use('/api/records', recordsRoutes);
 app.use('/api/emergency', emergencyRoutes);
 app.use('/api/ambulances', ambulanceRoutes);
 app.use('/api/pharmacy', pharmacyRoutes);
+app.use('/api/hospitals', hospitalRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/telemedicine', telemedicineRoutes);
 
 app.get('/health', (req, res) => {
   res.json({

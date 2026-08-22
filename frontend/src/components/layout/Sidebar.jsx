@@ -5,31 +5,35 @@ import Avatar from '@/components/ui/Avatar';
 import {
   LayoutDashboard, Calendar, Users, UserCog, ClipboardList,
   Stethoscope, LogOut, ChevronRight, Activity, Bell, Settings,
-  FileText, UserPlus, Shield, Store,
+  FileText, UserPlus, Shield, Store, Building2, BrainCircuit, Video
 } from 'lucide-react';
 
 const navConfigs = {
   PATIENT: [
-    { label: 'Dashboard',     to: '/patient',               icon: LayoutDashboard },
-    { label: 'Find Doctors',  to: '/patient/doctors',       icon: Stethoscope },
-    { label: 'Pharmacies',    to: '/patient/pharmacies',    icon: Store },
-    { label: 'Appointments',  to: '/patient/appointments',  icon: Calendar },
-    { label: 'Medical Records', to: '/patient/records',     icon: ClipboardList },
-    { label: 'AI Analytics',  to: '/patient/analytics',     icon: Activity },
-    { label: 'Profile',       to: '/patient/profile',       icon: UserCog },
+    { label: 'Dashboard',         to: '/patient',               icon: LayoutDashboard },
+    { label: 'Find Doctors',      to: '/patient/doctors',       icon: Stethoscope },
+    { label: 'Hospitals & Trauma',to: '/patient/hospitals',     icon: Building2 },
+    { label: 'ML Risk Predictor', to: '/patient/ml-prediction', icon: BrainCircuit },
+    { label: 'AI Analytics',      to: '/patient/analytics',     icon: Activity },
+    { label: 'EHR Medical Record',to: '/patient/records',       icon: ClipboardList },
+    { label: 'Pharmacies',        to: '/patient/pharmacies',    icon: Store },
+    { label: 'Appointments',      to: '/patient/appointments',  icon: Calendar },
+    { label: 'Telemedicine Visit',to: '/telemedicine/quick-room',icon: Video },
+    { label: 'Profile',           to: '/patient/profile',       icon: UserCog },
   ],
   DOCTOR: [
-    { label: 'Dashboard',     to: '/doctor',               icon: LayoutDashboard },
-    { label: 'Appointments',  to: '/doctor/appointments',   icon: Calendar },
-    { label: 'Today',         to: '/doctor/today',          icon: Activity },
-    { label: 'Profile',       to: '/doctor/profile',        icon: UserCog },
+    { label: 'Dashboard',         to: '/doctor',               icon: LayoutDashboard },
+    { label: 'Appointments',      to: '/doctor/appointments',   icon: Calendar },
+    { label: 'Today Schedule',    to: '/doctor/today',          icon: Activity },
+    { label: 'Telemedicine Room', to: '/telemedicine/quick-room',icon: Video },
+    { label: 'Profile',           to: '/doctor/profile',        icon: UserCog },
   ],
   ADMIN: [
-    { label: 'Dashboard',     to: '/admin',                 icon: LayoutDashboard },
-    { label: 'Doctors',       to: '/admin/doctors',         icon: Stethoscope },
-    { label: 'Patients',      to: '/admin/patients',        icon: Users },
-    { label: 'Appointments',  to: '/admin/appointments',    icon: Calendar },
-    { label: 'Add Doctor',    to: '/admin/doctors/new',     icon: UserPlus },
+    { label: 'Dashboard',         to: '/admin',                 icon: LayoutDashboard },
+    { label: 'Doctors',           to: '/admin/doctors',         icon: Stethoscope },
+    { label: 'Patients',          to: '/admin/patients',        icon: Users },
+    { label: 'Appointments',      to: '/admin/appointments',    icon: Calendar },
+    { label: 'Add Doctor',        to: '/admin/doctors/new',     icon: UserPlus },
   ],
 };
 
