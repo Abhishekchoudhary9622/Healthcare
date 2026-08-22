@@ -10,8 +10,17 @@ async function main() {
   console.log("Connected to MongoDB");
 
   // Admin
-  let admin = await User.findOne({ email:"admin@healthsync.com" });
-  if (!admin) { admin = await User.create({ email:"admin@healthsync.com", password:await bcrypt.hash("Admin@123",12), firstName:"System", lastName:"Admin", role:"ADMIN" }); console.log("Admin created"); }
+  let admin = await User.findOne({ email: "choudharyabhishek656@gmail.com" });
+  if (!admin) {
+    admin = await User.create({
+      email: "choudharyabhishek656@gmail.com",
+      password: await bcrypt.hash("Abhishek@09", 12),
+      firstName: "Abhishek",
+      lastName: "Choudhary",
+      role: "ADMIN"
+    });
+    console.log("Admin created: choudharyabhishek656@gmail.com");
+  }
 
   // Doctors
   const doctors = [
@@ -40,7 +49,7 @@ async function main() {
   }
 
   console.log("\nSeed complete!");
-  console.log("Admin:   admin@healthsync.com / Admin@123");
+  console.log("Admin:   choudharyabhishek656@gmail.com / Abhishek@09");
   console.log("Doctor:  dr.williams@healthsync.com / Doctor@123");
   console.log("Patient: patient@healthsync.com / Patient@123");
   await mongoose.disconnect();

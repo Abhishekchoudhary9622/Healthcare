@@ -88,7 +88,7 @@ npm run dev
 
 | Role    | Email                          | Password    |
 |---------|--------------------------------|-------------|
-| Admin   | admin@healthsync.com           | Admin@123   |
+| Admin   | choudharyabhishek656@gmail.com | Abhishek@09 |
 | Doctor  | dr.williams@healthsync.com     | Doctor@123  |
 | Patient | patient@healthsync.com         | Patient@123 |
 
