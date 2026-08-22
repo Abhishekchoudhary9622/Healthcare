@@ -67,44 +67,94 @@ const holdSlot = asyncHandler(async (req, res) => {
 
 const bookAppointment = asyncHandler(async (req, res) => {
   const { doctorId, scheduledAt, symptoms } = req.body;
-  const [patient, doctor] = await Promise.all([
-    PatientProfile.findOne({ userId:req.user.id }).populate("userId","email firstName lastName"),
-    DoctorProfile.findById(doctorId).populate("userId","email firstName lastName"),
+  let [patient, doctor] = await Promise.all([
+    PatientProfile.findOne({ userId: req.user.id }).populate("userId", "email firstName lastName"),
+    DoctorProfile.findById(doctorId).populate("userId", "email firstName lastName"),
   ]);
-  if (!patient) return badRequest(res,"Patient profile not found");
-  if (!doctor)  return notFound(res,"Doctor not found");
+  
+  if (!patient) {
+    patient = await PatientProfile.create({ userId: req.user.id });
+    patient = await PatientProfile.findById(patient._id).populate("userId", "email firstName lastName");
+  }
+  
+  if (!doctor) return notFound(res, "Doctor not found");
   const slotTime = new Date(scheduledAt);
-  const endTime  = new Date(slotTime.getTime()+doctor.slotDuration*60*1000);
-  const leaveDate=new Date(slotTime); leaveDate.setHours(0,0,0,0);
-  if (await LeaveDay.findOne({ doctorProfileId:doctorId, date:leaveDate })) return badRequest(res,"Doctor is on leave");
-  if (await Appointment.findOne({ doctorProfileId:doctorId, scheduledAt:slotTime, status:{ $in:["CONFIRMED","PENDING"] } })) return badRequest(res,"Slot already booked");
-  const appointment = await Appointment.create({ doctorProfileId:doctorId, patientProfileId:patient._id, scheduledAt:slotTime, endsAt:endTime, status:"CONFIRMED", symptoms });
-  await SlotHold.deleteOne({ doctorProfileId:doctorId, scheduledAt:slotTime });
-  if (symptoms) generatePreVisitSummary(appointment._id.toString(), symptoms).catch(()=>{});
+  const endTime  = new Date(slotTime.getTime() + (doctor.slotDuration || 30) * 60 * 1000);
+  const leaveDate = new Date(slotTime);
+  leaveDate.setHours(0, 0, 0, 0);
+
+  if (await LeaveDay.findOne({ doctorProfileId: doctorId, date: leaveDate })) {
+    return badRequest(res, "Doctor is on leave");
+  }
+  if (await Appointment.findOne({ doctorProfileId: doctorId, scheduledAt: slotTime, status: { $in: ["CONFIRMED", "PENDING"] } })) {
+    return badRequest(res, "Slot already booked");
+  }
+
+  const appointment = await Appointment.create({
+    doctorProfileId: doctorId,
+    patientProfileId: patient._id,
+    scheduledAt: slotTime,
+    endsAt: endTime,
+    status: "CONFIRMED",
+    symptoms
+  });
+
+  await SlotHold.deleteOne({ doctorProfileId: doctorId, scheduledAt: slotTime });
+  if (symptoms) generatePreVisitSummary(appointment._id.toString(), symptoms).catch(() => {});
+
   const pu = patient.userId, du = doctor.userId;
-  queueNotification({ appointmentId:appointment._id, recipientEmail:pu.email, recipientName:pu.firstName+" "+pu.lastName, type:"BOOKING_CONFIRMATION", subject:"Appointment Confirmed with Dr. "+du.firstName+" "+du.lastName, body:"Your appointment with Dr. "+du.firstName+" "+du.lastName+" is confirmed on "+slotTime.toLocaleString() }).catch(()=>{});
-  queueNotification({ appointmentId:appointment._id, recipientEmail:du.email, recipientName:"Dr. "+du.firstName+" "+du.lastName, type:"BOOKING_CONFIRMATION", subject:"New Appointment: "+pu.firstName+" "+pu.lastName, body:"New appointment scheduled with "+pu.firstName+" "+pu.lastName+" on "+slotTime.toLocaleString() }).catch(()=>{});
-  createCalendarEvent(appointment._id.toString(),{ patientUser:pu, doctorUser:du, scheduledAt:slotTime, endsAt:endTime, doctorSpecialisation:doctor.specialisation }).catch(()=>{});
+  if (pu && du) {
+    queueNotification({
+      appointmentId: appointment._id,
+      recipientEmail: pu.email,
+      recipientName: pu.firstName + " " + pu.lastName,
+      type: "BOOKING_CONFIRMATION",
+      subject: "Appointment Confirmed with Dr. " + du.firstName + " " + du.lastName,
+      body: "Your appointment with Dr. " + du.firstName + " " + du.lastName + " is confirmed on " + slotTime.toLocaleString()
+    }).catch(() => {});
+
+    queueNotification({
+      appointmentId: appointment._id,
+      recipientEmail: du.email,
+      recipientName: "Dr. " + du.firstName + " " + du.lastName,
+      type: "BOOKING_CONFIRMATION",
+      subject: "New Appointment: " + pu.firstName + " " + pu.lastName,
+      body: "New appointment scheduled with " + pu.firstName + " " + pu.lastName + " on " + slotTime.toLocaleString()
+    }).catch(() => {});
+
+    createCalendarEvent(appointment._id.toString(), {
+      patientUser: pu,
+      doctorUser: du,
+      scheduledAt: slotTime,
+      endsAt: endTime,
+      doctorSpecialisation: doctor.specialisation
+    }).catch(() => {});
+  }
+
   const full = await Appointment.findById(appointment._id)
-    .populate({ path:"doctorProfileId",  populate:{ path:"userId", select:"firstName lastName email" } })
-    .populate({ path:"patientProfileId", populate:{ path:"userId", select:"firstName lastName email" } });
+    .populate({ path: "doctorProfileId",  populate: { path: "userId", select: "firstName lastName email" } })
+    .populate({ path: "patientProfileId", populate: { path: "userId", select: "firstName lastName email" } });
+
   return created(res, full, "Appointment booked");
 });
 
 const getMyAppointments = asyncHandler(async (req, res) => {
-  const { status, page=1, limit=10 } = req.query;
-  const skip=(Number(page)-1)*Number(limit);
-  const patient = await PatientProfile.findOne({ userId:req.user.id });
-  if (!patient) return notFound(res,"Patient profile not found");
-  const q = { patientProfileId:patient._id };
-  if (status) q.status=status;
-  const [appointments,total] = await Promise.all([
-    Appointment.find(q).skip(skip).limit(Number(limit)).sort({ scheduledAt:-1 })
-      .populate({ path:"doctorProfileId", populate:{ path:"userId", select:"firstName lastName email avatar" } })
+  const { status, page = 1, limit = 10 } = req.query;
+  const skip = (Number(page) - 1) * Number(limit);
+  let patient = await PatientProfile.findOne({ userId: req.user.id });
+  if (!patient) {
+    patient = await PatientProfile.create({ userId: req.user.id });
+  }
+
+  const q = { patientProfileId: patient._id };
+  if (status) q.status = status;
+  const [appointments, total] = await Promise.all([
+    Appointment.find(q).skip(skip).limit(Number(limit)).sort({ scheduledAt: -1 })
+      .populate({ path: "doctorProfileId", populate: { path: "userId", select: "firstName lastName email avatar" } })
       .populate("prescriptions").lean(),
     Appointment.countDocuments(q),
   ]);
-  return success(res,{ appointments, pagination:{ total, page:Number(page), limit:Number(limit), pages:Math.ceil(total/Number(limit)) } });
+  return success(res, { appointments, pagination: { total, page: Number(page), limit: Number(limit), pages: Math.ceil(total / Number(limit)) } });
 });
 
 const getAppointmentById = asyncHandler(async (req, res) => {

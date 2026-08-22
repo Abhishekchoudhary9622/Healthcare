@@ -81,7 +81,7 @@ export default function BookingModal({ doctor, onClose }) {
           <Avatar firstName={doctor.firstName} lastName={doctor.lastName} size="md" />
           <div>
             <p className="font-semibold text-[var(--text-primary)] text-sm">Dr. {doctor.firstName} {doctor.lastName}</p>
-            <p className="text-xs text-[var(--text-muted)]">{docProfile?.specialisation} · ${docProfile?.consultationFee}/visit</p>
+            <p className="text-xs text-[var(--text-muted)]">{docProfile?.specialisation} · ₹{docProfile?.consultationFee || 800}/visit</p>
           </div>
         </div>
 

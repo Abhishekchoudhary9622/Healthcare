@@ -12,10 +12,10 @@ router.get('/slots', ctrl.getAvailableSlots);
 // Authenticated
 router.use(authenticate);
 
-// Hold slot (patient only)
+// Hold slot (patient / doctor / admin)
 router.post(
   '/hold',
-  authorize('PATIENT'),
+  authorize('PATIENT', 'DOCTOR', 'ADMIN'),
   [
     body('doctorId').notEmpty(),
     body('scheduledAt').isISO8601(),
@@ -27,7 +27,7 @@ router.post(
 // Book
 router.post(
   '/',
-  authorize('PATIENT'),
+  authorize('PATIENT', 'DOCTOR', 'ADMIN'),
   [
     body('doctorId').notEmpty(),
     body('scheduledAt').isISO8601(),
@@ -37,7 +37,7 @@ router.post(
 );
 
 // Patient appointments
-router.get('/mine', authorize('PATIENT'), ctrl.getMyAppointments);
+router.get('/mine', authorize('PATIENT', 'DOCTOR', 'ADMIN'), ctrl.getMyAppointments);
 
 // Single appointment (patient, doctor, admin)
 router.get('/:id', ctrl.getAppointmentById);
@@ -48,16 +48,16 @@ router.patch('/:id/cancel', ctrl.cancelAppointment);
 // Reschedule (patient/admin)
 router.patch(
   '/:id/reschedule',
-  authorize('PATIENT', 'ADMIN'),
+  authorize('PATIENT', 'DOCTOR', 'ADMIN'),
   [body('newScheduledAt').isISO8601()],
   validate,
   ctrl.rescheduleAppointment
 );
 
-// Submit symptoms (patient)
+// Submit symptoms
 router.patch(
   '/:id/symptoms',
-  authorize('PATIENT'),
+  authorize('PATIENT', 'DOCTOR', 'ADMIN'),
   [body('symptoms').trim().notEmpty()],
   validate,
   ctrl.submitSymptoms
