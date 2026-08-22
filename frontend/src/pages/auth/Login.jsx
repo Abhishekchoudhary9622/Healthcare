@@ -214,15 +214,13 @@ export default function Login() {
   return (
     <div className="min-h-screen flex bg-[var(--bg-primary)] overflow-hidden">
       {/* Left decorative medical showcase panel */}
-      <div className="hidden lg:flex lg:flex-1 bg-gradient-to-br from-[#061121] via-[#091b33] to-[#04202b] p-10 flex-col justify-between relative overflow-hidden border-r border-teal-500/15">
+      <div className="hidden lg:flex lg:flex-1 bg-gradient-to-br from-[#071322] via-[#0a1e35] to-[#041a23] p-10 flex-col justify-between relative overflow-hidden border-r border-teal-500/15">
         
-        {/* Ambient bioluminescent glows & subtle pattern */}
-        <div className="absolute inset-0 bg-[radial-gradient(#0ea5e915_1px,transparent_1px)] [background-size:24px_24px] pointer-events-none opacity-40" />
-        <div className="absolute top-[-5%] left-[-5%] h-80 w-80 rounded-full bg-teal-500/20 blur-[100px] pointer-events-none" />
-        <div className="absolute bottom-[-5%] right-[-5%] h-96 w-96 rounded-full bg-emerald-500/15 blur-[120px] pointer-events-none" />
-        <div className="absolute top-1/2 left-1/4 h-72 w-72 rounded-full bg-blue-500/10 blur-[90px] pointer-events-none" />
+        {/* Soft background ambient lighting */}
+        <div className="absolute top-[-5%] left-[-5%] h-80 w-80 rounded-full bg-teal-500/15 blur-[100px] pointer-events-none" />
+        <div className="absolute bottom-[-5%] right-[-5%] h-96 w-96 rounded-full bg-emerald-500/10 blur-[120px] pointer-events-none" />
 
-        {/* Top Header: Brand & Live Patient Care Status */}
+        {/* Top Header: Brand Logo */}
         <div className="relative z-10">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -232,131 +230,84 @@ export default function Login() {
                 </div>
               </div>
               <div>
-                <span className="text-white font-extrabold text-2xl tracking-tight flex items-center gap-2">
-                  HealthSync
-                </span>
-                <p className="text-xs text-teal-300/80 font-medium">Healthcare Designed Around You</p>
+                <span className="text-white font-extrabold text-2xl tracking-tight">HealthSync</span>
+                <p className="text-xs text-teal-300/80 font-medium">Healthcare & Wellness Portal</p>
               </div>
             </div>
 
-            {/* Instant Care Badge */}
             <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-semibold backdrop-blur-md">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-              </span>
-              <span>24/7 Doctors On-Call</span>
+              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping" />
+              <span>Care Network Online</span>
             </div>
-          </div>
-
-          {/* Main Hero Copy */}
-          <div className="mt-8">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-500/15 border border-teal-500/30 text-teal-200 text-xs font-semibold mb-3.5 backdrop-blur-sm">
-              <ShieldCheck className="h-3.5 w-3.5 text-teal-400" />
-              100% Certified Specialists • Instant E-Prescriptions
-            </div>
-            <h2 className="text-3xl xl:text-4xl font-extrabold text-white leading-tight tracking-tight">
-              Compassionate Care,<br />
-              <span className="bg-gradient-to-r from-teal-300 via-cyan-200 to-sky-300 bg-clip-text text-transparent">
-                Connected Seamlessly.
-              </span>
-            </h2>
-            <p className="mt-2.5 text-slate-300 text-sm leading-relaxed max-w-md">
-              Book consultations with top-rated doctors, track emergency hospital beds, manage family health records, and receive care from home.
-            </p>
           </div>
         </div>
 
-        {/* Center Showcase: Verified Doctor Card + Specialty Services + Live Vitals */}
-        <div className="relative z-10 my-4 space-y-3.5 max-w-xl">
+        {/* Middle Showcase: Photo Banner + Inspirational Quote */}
+        <div className="relative z-10 my-auto py-4 space-y-5 max-w-lg">
           
-          {/* Card 1: Verified Specialist Showcase */}
-          <div className="bg-[#0c1f38]/80 backdrop-blur-xl border border-teal-500/25 rounded-2xl p-4 shadow-2xl shadow-black/50 hover:border-teal-400/40 transition-all">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-700/60">
-              <div className="flex items-center gap-3">
-                <div className="relative">
-                  <img
-                    src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=120&auto=format&fit=crop&q=80"
-                    alt="Doctor"
-                    className="h-12 w-12 rounded-2xl object-cover ring-2 ring-teal-400/40 shadow-md"
-                  />
-                  <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-emerald-500 ring-2 ring-[#0c1f38]" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-1.5">
-                    <h4 className="text-sm font-bold text-white">Dr. Emily Williams</h4>
-                    <Award className="h-3.5 w-3.5 text-teal-400" />
-                  </div>
-                  <p className="text-xs text-teal-300 font-medium">Cardiologist • MBBS, MD (12+ Yrs Exp)</p>
-                </div>
+          {/* Aesthetic Medical Picture Card */}
+          <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-teal-500/20 group">
+            <img
+              src="/healthcare_hero.jpg"
+              alt="Medical Care Team"
+              className="w-full h-52 object-cover transition-transform duration-700 group-hover:scale-105"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#071322] via-transparent to-transparent" />
+            
+            <div className="absolute bottom-3 left-4 right-4 flex items-center justify-between">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#071322]/80 border border-teal-500/30 text-teal-200 text-xs font-semibold backdrop-blur-md">
+                <ShieldCheck className="h-3.5 w-3.5 text-teal-400" />
+                Trusted by 12,000+ Families
               </div>
-              <div className="text-right">
-                <div className="flex items-center gap-1 text-amber-400 text-xs font-bold justify-end">
-                  <Star className="h-3.5 w-3.5 fill-current" /> 4.9
-                </div>
-                <p className="text-[10px] text-slate-400">1,420+ Patients</p>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between pt-3 text-xs">
-              <div className="flex items-center gap-2 text-slate-300">
-                <Clock className="h-3.5 w-3.5 text-teal-400" />
-                <span>Next slot: <strong className="text-white">Today, 4:30 PM</strong></span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-slate-400">Consultation:</span>
-                <span className="px-2 py-0.5 rounded-lg bg-teal-500/20 text-teal-200 font-bold text-xs border border-teal-500/30">₹800</span>
-              </div>
+              <span className="text-xs font-bold text-emerald-300 bg-emerald-950/70 px-2.5 py-1 rounded-full border border-emerald-500/30 backdrop-blur-md">
+                24/7 Care
+              </span>
             </div>
           </div>
 
-          {/* Card 2: Interactive Specialty Quick-Connect Grid */}
-          <div className="grid grid-cols-3 gap-2">
-            {[
-              { title: 'Cardiology', desc: 'Heart Health', icon: '❤️', color: 'from-rose-500/20 to-rose-900/10 border-rose-500/30 text-rose-300' },
-              { title: 'Dermatology', desc: 'Skin & Hair', icon: '✨', color: 'from-amber-500/20 to-amber-900/10 border-amber-500/30 text-amber-300' },
-              { title: 'Pediatrics', desc: 'Child Wellness', icon: '👶', color: 'from-sky-500/20 to-sky-900/10 border-sky-500/30 text-sky-300' },
-              { title: 'Neurology', desc: 'Brain & Spine', icon: '🧠', color: 'from-indigo-500/20 to-indigo-900/10 border-indigo-500/30 text-indigo-300' },
-              { title: 'Orthopedics', desc: 'Joints & Bones', icon: '🦴', color: 'from-emerald-500/20 to-emerald-900/10 border-emerald-500/30 text-emerald-300' },
-              { title: 'Emergency SOS', desc: 'Instant Hospital', icon: '🚑', color: 'from-red-500/20 to-red-900/10 border-red-500/30 text-red-300' },
-            ].map((s) => (
-              <div key={s.title} className={`p-2.5 rounded-xl bg-gradient-to-br ${s.color} border backdrop-blur-md transition-transform hover:scale-[1.02]`}>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-sm">{s.icon}</span>
-                  <p className="text-xs font-bold text-white truncate">{s.title}</p>
-                </div>
-                <p className="text-[10px] text-slate-400 mt-0.5 truncate">{s.desc}</p>
-              </div>
-            ))}
+          {/* Inspirational Healthcare Quote */}
+          <div className="p-5 rounded-2xl bg-[#091b30]/80 border border-teal-500/20 backdrop-blur-md shadow-lg relative">
+            <div className="text-teal-400 text-3xl font-serif leading-none mb-1 opacity-60">“</div>
+            <p className="text-slate-200 text-sm font-medium italic leading-relaxed pl-2">
+              Wherever the art of Medicine is loved, there is also a love of Humanity.
+            </p>
+            <div className="flex items-center justify-between mt-3 pt-2.5 border-t border-slate-700/50 pl-2">
+              <span className="text-xs font-bold text-teal-300">— Hippocrates</span>
+              <span className="text-[11px] text-slate-400">Father of Modern Medicine</span>
+            </div>
           </div>
 
-          {/* Card 3: Patient Testimonial Quote */}
-          <div className="p-3 rounded-xl bg-[#07172b]/90 border border-slate-700/60 backdrop-blur-sm flex items-start gap-3">
-            <div className="h-8 w-8 rounded-full bg-teal-500/20 flex items-center justify-center shrink-0 text-teal-300 font-bold text-xs">
-              PS
+          {/* 3 Simple Healthcare Pillars */}
+          <div className="grid grid-cols-3 gap-2.5">
+            <div className="p-3 rounded-xl bg-[#07172b]/80 border border-slate-700/60 text-center">
+              <span className="text-lg">🩺</span>
+              <p className="text-xs font-bold text-white mt-1">Specialists</p>
+              <p className="text-[10px] text-slate-400 mt-0.5">Top Verified Doctors</p>
             </div>
-            <div>
-              <p className="text-xs text-slate-200 italic leading-relaxed">
-                "Found a top-rated cardiologist in minutes and had my digital prescription delivered to my phone right away."
-              </p>
-              <p className="text-[10px] text-teal-400 font-semibold mt-1">
-                — Priya S. • <span className="text-slate-400">Verified Patient Review (5.0★)</span>
-              </p>
+            <div className="p-3 rounded-xl bg-[#07172b]/80 border border-slate-700/60 text-center">
+              <span className="text-lg">🏥</span>
+              <p className="text-xs font-bold text-white mt-1">Hospitals</p>
+              <p className="text-[10px] text-slate-400 mt-0.5">Live Bed & SOS</p>
+            </div>
+            <div className="p-3 rounded-xl bg-[#07172b]/80 border border-slate-700/60 text-center">
+              <span className="text-lg">📁</span>
+              <p className="text-xs font-bold text-white mt-1">Records</p>
+              <p className="text-[10px] text-slate-400 mt-0.5">Digital EHR History</p>
             </div>
           </div>
         </div>
 
-        {/* Bottom Care Impact Metrics */}
-        <div className="relative z-10 grid grid-cols-4 gap-2.5">
+        {/* Bottom Simple Metrics Bar */}
+        <div className="relative z-10 grid grid-cols-4 gap-2.5 pt-2">
           {[
-            { label: 'Happy Patients', value: '12,400+' },
-            { label: 'Verified Doctors', value: '340+' },
-            { label: 'Avg Connect Time', value: '15 Mins' },
-            { label: 'Patient Rating', value: '4.9★' },
+            { label: 'Patients', value: '12,400+' },
+            { label: 'Doctors', value: '340+' },
+            { label: 'Rating', value: '4.9★' },
+            { label: 'Support', value: '24/7' },
           ].map(({ label, value }) => (
             <div key={label} className="bg-[#07172b]/80 border border-slate-800 backdrop-blur-md rounded-xl p-2.5 text-center">
               <p className="text-sm xl:text-base font-extrabold text-white">{value}</p>
-              <p className="text-slate-400 text-[10px] font-medium mt-0.5 truncate">{label}</p>
+              <p className="text-slate-400 text-[10px] font-medium mt-0.5">{label}</p>
             </div>
           ))}
         </div>
