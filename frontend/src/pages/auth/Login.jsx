@@ -1,7 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { Activity, Mail, Lock, Eye, EyeOff, ArrowRight, Phone, KeyRound, CheckCircle2, ArrowLeft, ShieldCheck, RefreshCw } from 'lucide-react';
+import {
+  Activity, Mail, Lock, Eye, EyeOff, ArrowRight, Phone, KeyRound,
+  CheckCircle2, ArrowLeft, ShieldCheck, RefreshCw, Award, Star, Clock,
+  HeartPulse, Stethoscope, Sparkles
+} from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { useToast } from '@/components/ui/Toast';
 import Button from '@/components/ui/Button';
