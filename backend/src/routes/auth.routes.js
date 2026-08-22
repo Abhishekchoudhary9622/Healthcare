@@ -27,6 +27,32 @@ router.post(
   ctrl.login
 );
 
+// Password recovery
+router.post(
+  '/forgot-password',
+  [body('email').isEmail().normalizeEmail()],
+  validate,
+  ctrl.forgotPassword
+);
+
+router.post(
+  '/reset-password',
+  [
+    body('email').isEmail().normalizeEmail(),
+    body('otp').trim().notEmpty(),
+    body('newPassword').isLength({ min: 8 }).withMessage('Password must be at least 8 characters')
+  ],
+  validate,
+  ctrl.resetPassword
+);
+
+// Phone OTP Authentication
+router.post('/send-otp', [body('phone').trim().notEmpty()], validate, ctrl.sendPhoneOtp);
+router.post('/verify-otp', [body('phone').trim().notEmpty(), body('otp').trim().notEmpty()], validate, ctrl.verifyPhoneOtp);
+
+// Google OAuth Sign-in
+router.post('/google', ctrl.googleAuth);
+
 router.post('/refresh', ctrl.refreshToken);
 router.post('/logout', ctrl.logout);
 

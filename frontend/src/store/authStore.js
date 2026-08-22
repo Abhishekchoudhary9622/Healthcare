@@ -22,6 +22,24 @@ export const useAuthStore = create(
         return user;
       },
 
+      loginWithPhoneOtp: async (phone, otp) => {
+        const { data } = await api.post('/auth/verify-otp', { phone, otp });
+        const { user, accessToken, refreshToken } = data.data;
+        localStorage.setItem('accessToken', accessToken);
+        localStorage.setItem('refreshToken', refreshToken);
+        set({ user, accessToken, refreshToken, isAuthenticated: true });
+        return user;
+      },
+
+      loginWithGoogle: async (googleUser) => {
+        const { data } = await api.post('/auth/google', googleUser);
+        const { user, accessToken, refreshToken } = data.data;
+        localStorage.setItem('accessToken', accessToken);
+        localStorage.setItem('refreshToken', refreshToken);
+        set({ user, accessToken, refreshToken, isAuthenticated: true });
+        return user;
+      },
+
       register: async (payload) => {
         const { data } = await api.post('/auth/register', payload);
         const { user, accessToken, refreshToken } = data.data;
