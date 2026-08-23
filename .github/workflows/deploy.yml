@@ -7,10 +7,9 @@ on:
     branches: [ main ]
 
 jobs:
-  build-and-test:
-    name: Build & Verify Full-Stack App
+  backend-check:
+    name: Backend Check
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -19,23 +18,31 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 18
-          cache: 'npm'
-          cache-dependency-path: |
-            backend/package-lock.json
-            frontend/package-lock.json
 
       - name: Install Backend Dependencies
         working-directory: ./backend
         run: npm ci
 
-      - name: Verify Backend Syntax & Imports
+      - name: Verify Backend Server Syntax
         working-directory: ./backend
         run: node -c src/server.js
+
+  frontend-build:
+    name: Frontend Build (Vite)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
 
       - name: Install Frontend Dependencies
         working-directory: ./frontend
         run: npm ci
 
-      - name: Build Frontend (Vite)
+      - name: Build Frontend
         working-directory: ./frontend
         run: npm run build

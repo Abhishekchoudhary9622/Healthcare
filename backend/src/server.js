@@ -48,7 +48,8 @@ const allowedOrigins = [
 const isAllowedOrigin = (origin) => {
   if (!origin) return true;
   if (allowedOrigins.includes(origin)) return true;
-  if (/^https:\/\/healthcare-frontend-[a-z0-9-]+-shell11\.vercel\.app$/.test(origin)) return true;
+  if (/^https:\/\/[a-z0-9-]+\.vercel\.app$/.test(origin)) return true;
+  if (/^https:\/\/[a-z0-9-]+\.onrender\.com$/.test(origin)) return true;
   return false;
 };
 
