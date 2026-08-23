@@ -160,12 +160,14 @@ app.use('/api/telemedicine', telemedicineRoutes);
 app.use('/api/consultation', consultationRoutes);
 
 app.get('/health', (req, res) => {
+  const mongoose = require('mongoose');
   res.json({
     status: 'ok',
     timestamp: new Date().toISOString(),
-    db: 'mongodb',
+    db: mongoose.connection.readyState === 1 ? 'connected' : 'connecting',
     realtime: 'socket.io',
-    env: config.NODE_ENV
+    env: config.NODE_ENV,
+    uptime: Math.floor(process.uptime())
   });
 });
 
@@ -197,15 +199,24 @@ app.use(errorHandler);
 
 const start = async () => {
   try {
-    await connectDB();
-
+    // 1. Bind and listen on PORT immediately so cloud deployment healthchecks pass
     server.listen(config.PORT, '0.0.0.0', () => {
       logger.info(
         `HealthSync HTTP & Socket.IO server running on port ${config.PORT} [${config.NODE_ENV}]`
       );
     });
 
-    startScheduler();
+    // 2. Connect to MongoDB database
+    connectDB().catch((err) => {
+      logger.warn('[Database] Initial connect error: ' + err.message);
+    });
+
+    // 3. Start background job scheduler
+    try {
+      startScheduler();
+    } catch (schedErr) {
+      logger.warn('[Scheduler] Scheduler initialization warning: ' + schedErr.message);
+    }
   } catch (err) {
     logger.error('Failed to start server: ' + err.message);
     process.exit(1);

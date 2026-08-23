@@ -4,6 +4,7 @@
   "description": "Healthcare Appointment & Follow-up Manager Backend",
   "main": "src/server.js",
   "scripts": {
+    "build": "echo 'Backend build ready'",
     "start": "node src/server.js",
     "dev": "nodemon",
     "build:ui": "cd ../frontend && npm run build",
