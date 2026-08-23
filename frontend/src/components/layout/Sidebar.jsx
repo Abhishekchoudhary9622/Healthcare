@@ -91,7 +91,7 @@ export default function Sidebar({ mobile = false, onClose }) {
       {/* User */}
       <div className="p-3 border-t border-[var(--border)]">
         <div className="flex items-center gap-3 p-3 rounded-xl hover:bg-[var(--bg-tertiary)]">
-          <Avatar firstName={user?.firstName} lastName={user?.lastName} size="sm" />
+          <Avatar firstName={user?.firstName} lastName={user?.lastName} src={user?.avatar} size="sm" />
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-[var(--text-primary)] truncate">
               {user?.firstName} {user?.lastName}

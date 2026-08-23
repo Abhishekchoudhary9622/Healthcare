@@ -61,7 +61,7 @@ export default function Topbar({ onMenuClick, title }) {
 
       {/* User chip */}
       <div className="flex items-center gap-2.5">
-        <Avatar firstName={user?.firstName} lastName={user?.lastName} size="sm" />
+        <Avatar firstName={user?.firstName} lastName={user?.lastName} src={user?.avatar} size="sm" />
         <div className="hidden md:block">
           <p className="text-sm font-medium text-[var(--text-primary)] leading-tight">
             {user?.firstName} {user?.lastName}

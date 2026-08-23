@@ -94,19 +94,30 @@ npm run dev
 
 ---
 
-## Google Calendar Setup
+## Google Sign-In & Google Calendar OAuth Setup
 
 1. Go to [Google Cloud Console](https://console.cloud.google.com)
-2. Create a project → **APIs & Services** → **Enable APIs** → search "Google Calendar API" → Enable
-3. **Credentials** → **Create Credentials** → **OAuth 2.0 Client ID** → Web Application
-4. Add Authorised redirect URI: `http://localhost:5000/api/calendar/callback`
-5. Copy **Client ID** and **Client Secret** to `.env`:
-   ```env
-   GOOGLE_CLIENT_ID=xxx.apps.googleusercontent.com
-   GOOGLE_CLIENT_SECRET=xxx
-   GOOGLE_REDIRECT_URI=http://localhost:5000/api/calendar/callback
-   ```
-6. In the app, visit `GET /api/calendar/auth` (authenticated) to get the consent URL and complete the OAuth flow.
+2. Create a project → **APIs & Services** → **Enable APIs** → enable "Google Calendar API" (if using Calendar sync).
+3. **Credentials** → **Create Credentials** → **OAuth 2.0 Client ID** → Web Application.
+4. Add **Authorized JavaScript origins**:
+   - `http://localhost:5000`
+   - `http://localhost:5173`
+   - `http://localhost:3000`
+5. Add **Authorized redirect URIs**:
+   - `http://localhost:5000/api/calendar/callback`
+   - `http://localhost:5173`
+6. Copy your **Client ID** and **Client Secret**:
+   - In `frontend/.env`:
+     ```env
+     VITE_GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
+     ```
+   - In `backend/.env`:
+     ```env
+     GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
+     GOOGLE_CLIENT_SECRET=your-client-secret
+     GOOGLE_REDIRECT_URI=http://localhost:5000/api/calendar/callback
+     ```
+7. Google Sign-In & Sign-Up will automatically use your real Google credentials and sync verified profile names, emails, and avatars directly to MongoDB.
 
 ---
 

@@ -53,7 +53,7 @@ export default function PatientProfile() {
         {/* Avatar card */}
         <Card>
           <CardContent className="flex items-center gap-5">
-            <Avatar firstName={user?.firstName} lastName={user?.lastName} size="2xl" />
+            <Avatar firstName={user?.firstName} lastName={user?.lastName} src={user?.avatar} size="2xl" />
             <div>
               <p className="font-bold text-lg text-[var(--text-primary)]">{user?.firstName} {user?.lastName}</p>
               <p className="text-sm text-[var(--text-muted)]">{user?.email}</p>

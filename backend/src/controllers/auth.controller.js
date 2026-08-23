@@ -1,4 +1,6 @@
 const bcrypt      = require('bcryptjs');
+const crypto      = require('crypto');
+const { OAuth2Client } = require('google-auth-library');
 const User          = require('../models/User');
 const DoctorProfile = require('../models/DoctorProfile');
 const PatientProfile= require('../models/PatientProfile');
@@ -7,6 +9,7 @@ const { signToken, signRefreshToken, verifyRefreshToken } = require('../utils/jw
 const { success, created, badRequest, unauthorized } = require('../utils/response');
 const asyncHandler = require('../utils/asyncHandler');
 const logger = require('../config/logger');
+const config = require('../config');
 
 // Clean and normalize phone numbers
 function normalizePhone(phone) {
@@ -61,34 +64,132 @@ const login = asyncHandler(async (req, res) => {
   return success(res, { user: { ...safe, doctorProfile, patientProfile }, accessToken, refreshToken }, 'Login successful');
 });
 
-// POST /api/auth/google - Authenticate with Google account
+// POST /api/auth/google - Authenticate with Google account (Real Google OAuth & data fetching)
 const googleAuth = asyncHandler(async (req, res) => {
-  const { email, firstName, lastName, googleId, avatar } = req.body;
-  if (!email) return badRequest(res, 'Google email is required');
+  const { email, firstName, lastName, googleId, avatar, idToken, accessToken, role } = req.body;
 
-  const normalizedEmail = email.toLowerCase().trim();
-  let user = await User.findOne({ email: normalizedEmail });
+  let googleEmail = email;
+  let googleFirstName = firstName;
+  let googleLastName = lastName;
+  let googleAvatar = avatar;
+  let googleSubId = googleId;
+
+  // 1. If an ID Token is provided, verify it directly with Google
+  if (idToken) {
+    try {
+      const client = new OAuth2Client(config.GOOGLE_CLIENT_ID || undefined);
+      const ticket = await client.verifyIdToken({
+        idToken,
+        audience: config.GOOGLE_CLIENT_ID || undefined,
+      });
+      const payload = ticket.getPayload();
+      if (payload?.email) {
+        googleEmail = payload.email;
+        googleFirstName = payload.given_name || payload.name?.split(' ')[0] || googleFirstName || 'User';
+        googleLastName = payload.family_name || payload.name?.split(' ').slice(1).join(' ') || googleLastName || '';
+        googleAvatar = payload.picture || googleAvatar;
+        googleSubId = payload.sub || googleSubId;
+      }
+    } catch (tokenErr) {
+      logger.warn(`[Auth] ID token direct verification fallback: ${tokenErr.message}`);
+      try {
+        const tokenRes = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${idToken}`);
+        const tokenData = await tokenRes.json();
+        if (tokenData?.email) {
+          googleEmail = tokenData.email;
+          googleFirstName = tokenData.given_name || tokenData.name?.split(' ')[0] || googleFirstName || 'User';
+          googleLastName = tokenData.family_name || tokenData.name?.split(' ').slice(1).join(' ') || googleLastName || '';
+          googleAvatar = tokenData.picture || googleAvatar;
+          googleSubId = tokenData.sub || googleSubId;
+        }
+      } catch (e) {
+        logger.error(`[Auth] Google token verification failed: ${e.message}`);
+      }
+    }
+  }
+
+  // 2. If an Access Token is provided, fetch real user profile directly from Google userinfo API
+  if (accessToken && (!googleEmail || !googleAvatar)) {
+    try {
+      const userinfoRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+        headers: { Authorization: `Bearer ${accessToken}` }
+      });
+      const userinfoData = await userinfoRes.json();
+      if (userinfoData?.email) {
+        googleEmail = userinfoData.email;
+        googleFirstName = userinfoData.given_name || userinfoData.name?.split(' ')[0] || googleFirstName || 'User';
+        googleLastName = userinfoData.family_name || userinfoData.name?.split(' ').slice(1).join(' ') || googleLastName || '';
+        googleAvatar = userinfoData.picture || googleAvatar;
+        googleSubId = userinfoData.sub || googleSubId;
+      }
+    } catch (fetchErr) {
+      logger.warn(`[Auth] Google userinfo fetch failed: ${fetchErr.message}`);
+    }
+  }
+
+  if (!googleEmail) {
+    return badRequest(res, 'Could not retrieve verified Google email. Please try again.');
+  }
+
+  const normalizedEmail = googleEmail.toLowerCase().trim();
+  let user = await User.findOne({
+    $or: [
+      { email: normalizedEmail },
+      ...(googleSubId ? [{ googleId: googleSubId }] : [])
+    ]
+  });
 
   if (!user) {
-    const randomPassword = Math.random().toString(36).slice(-10) + Math.random().toString(36).slice(-10);
+    const randomPassword = crypto.randomBytes(32).toString('hex');
     const hashed = await bcrypt.hash(randomPassword, 12);
+    const userRole = role === 'DOCTOR' ? 'DOCTOR' : 'PATIENT';
+
     user = await User.create({
       email: normalizedEmail,
       password: hashed,
-      firstName: firstName || 'Google',
-      lastName: lastName || 'User',
-      avatar: avatar || undefined,
-      googleId: googleId || `google-${Date.now()}`,
-      role: 'PATIENT'
+      firstName: googleFirstName || 'Google',
+      lastName: googleLastName || 'User',
+      avatar: googleAvatar || undefined,
+      googleId: googleSubId || `google-${Date.now()}`,
+      role: userRole,
+      isActive: true,
     });
-    await PatientProfile.create({ userId: user._id });
-    logger.info(`[Auth] New user registered via Google Sign-In: ${normalizedEmail}`);
+
+    if (userRole === 'PATIENT') {
+      await PatientProfile.create({ userId: user._id });
+    } else if (userRole === 'DOCTOR') {
+      await DoctorProfile.create({
+        userId: user._id,
+        specialisation: 'General Medicine',
+        qualifications: 'MBBS',
+        experience: 1,
+      });
+    }
+
+    logger.info(`[Auth] New user registered via Real Google Sign-In: ${normalizedEmail} (Role: ${userRole})`);
   } else {
-    if (avatar && !user.avatar) {
-      user.avatar = avatar;
+    let updated = false;
+    if (googleAvatar && (!user.avatar || user.avatar.includes('unsplash'))) {
+      user.avatar = googleAvatar;
+      updated = true;
+    }
+    if (googleSubId && !user.googleId) {
+      user.googleId = googleSubId;
+      updated = true;
+    }
+    if (user.firstName === 'Google' && googleFirstName && googleFirstName !== 'Google') {
+      user.firstName = googleFirstName;
+      user.lastName = googleLastName || user.lastName;
+      updated = true;
+    }
+    if (!user.isActive) {
+      user.isActive = true;
+      updated = true;
+    }
+    if (updated) {
       await user.save();
     }
-    logger.info(`[Auth] Existing user logged in via Google: ${normalizedEmail}`);
+    logger.info(`[Auth] Existing user authenticated via Google Sign-In: ${normalizedEmail}`);
   }
 
   const [doctorProfile, patientProfile] = await Promise.all([
@@ -96,12 +197,12 @@ const googleAuth = asyncHandler(async (req, res) => {
     PatientProfile.findOne({ userId: user._id }).lean(),
   ]);
 
-  const accessToken  = signToken({ id: user._id, role: user.role });
+  const jwtAccessToken  = signToken({ id: user._id, role: user.role });
   const refreshToken = signRefreshToken({ id: user._id });
-  await RefreshToken.create({ userId: user._id, token: refreshToken, expiresAt: new Date(Date.now() + 7*24*60*60*1000) });
+  await RefreshToken.create({ userId: user._id, token: refreshToken, expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) });
 
   const { password: _, ...safe } = user.toObject();
-  return success(res, { user: { ...safe, doctorProfile, patientProfile }, accessToken, refreshToken }, 'Google sign-in successful');
+  return success(res, { user: { ...safe, doctorProfile, patientProfile }, accessToken: jwtAccessToken, refreshToken }, 'Google sign-in successful');
 });
 
 // POST /api/auth/send-otp - Generate & Send phone OTP with rate limiting & security

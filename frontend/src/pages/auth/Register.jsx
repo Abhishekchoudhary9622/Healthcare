@@ -8,6 +8,7 @@ import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
 import GoogleAuthModal from '@/components/shared/GoogleAuthModal';
+import { useGoogleLogin } from '@react-oauth/google';
 
 export default function Register() {
   const navigate = useNavigate();
@@ -16,7 +17,8 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
   const [isGoogleModalOpen, setIsGoogleModalOpen] = useState(false);
 
-  const { register, handleSubmit, formState: { errors } } = useForm({ defaultValues: { role: 'PATIENT' } });
+  const { register, handleSubmit, watch, formState: { errors } } = useForm({ defaultValues: { role: 'PATIENT' } });
+  const selectedRole = watch('role');
 
   const onSubmit = async (data) => {
     setLoading(true);
@@ -31,10 +33,59 @@ export default function Register() {
     }
   };
 
+  // Real Google OAuth Handler
+  const triggerGoogleOAuth = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      setLoading(true);
+      try {
+        const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
+        });
+        const googleProfile = await res.json();
+        
+        const payload = {
+          email: googleProfile.email,
+          firstName: googleProfile.given_name || googleProfile.name?.split(' ')[0] || 'User',
+          lastName: googleProfile.family_name || googleProfile.name?.split(' ').slice(1).join(' ') || '',
+          avatar: googleProfile.picture,
+          googleId: googleProfile.sub,
+          role: selectedRole || 'PATIENT',
+          accessToken: tokenResponse.access_token,
+        };
+
+        const user = await loginWithGoogle(payload);
+        setIsGoogleModalOpen(false);
+        toast({ type: 'success', title: 'Google Registration Successful', message: `Welcome to HealthSync, ${user.firstName}!` });
+        navigate(user.role === 'PATIENT' ? '/patient' : '/doctor');
+      } catch (err) {
+        toast({ type: 'error', title: 'Google registration failed', message: err.response?.data?.message || err.message || 'Please try again' });
+      } finally {
+        setLoading(false);
+      }
+    },
+    onError: (error) => {
+      console.warn('[Google Auth Register Error]:', error);
+      setIsGoogleModalOpen(true);
+    },
+  });
+
+  const handleGoogleButtonClick = () => {
+    const hasClientId = Boolean(import.meta.env.VITE_GOOGLE_CLIENT_ID);
+    if (hasClientId) {
+      try {
+        triggerGoogleOAuth();
+      } catch {
+        setIsGoogleModalOpen(true);
+      }
+    } else {
+      setIsGoogleModalOpen(true);
+    }
+  };
+
   const handleGoogleAccountSelected = async (googleUser) => {
     setLoading(true);
     try {
-      const user = await loginWithGoogle(googleUser);
+      const user = await loginWithGoogle({ ...googleUser, role: selectedRole || 'PATIENT' });
       setIsGoogleModalOpen(false);
       toast({ type: 'success', title: 'Google Registration Successful', message: `Welcome to HealthSync, ${user.firstName}!` });
       navigate(user.role === 'PATIENT' ? '/patient' : '/doctor');
@@ -74,7 +125,7 @@ export default function Register() {
           <div className="mt-6">
             <button
               type="button"
-              onClick={() => setIsGoogleModalOpen(true)}
+              onClick={handleGoogleButtonClick}
               disabled={loading}
               className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-2xl border border-[var(--border)] bg-[var(--bg-secondary)] hover:bg-[var(--bg-tertiary)] text-[var(--text-primary)] text-sm font-semibold shadow-sm transition-all hover:shadow hover:border-brand-500/50"
             >
@@ -173,11 +224,13 @@ export default function Register() {
         </p>
       </div>
 
-      {/* Google Account Chooser Modal */}
+      {/* Google Account Modal & Helper */}
       <GoogleAuthModal
         isOpen={isGoogleModalOpen}
         onClose={() => setIsGoogleModalOpen(false)}
         onSelectAccount={handleGoogleAccountSelected}
+        onTriggerGoogleOAuth={triggerGoogleOAuth}
+        role={selectedRole || 'PATIENT'}
         loading={loading}
       />
     </div>
