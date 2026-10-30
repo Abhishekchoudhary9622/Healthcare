@@ -43,3 +43,14 @@ tc.js
 tg.js
 check.js
 test_gemini.js
+
+# ── Python ───────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+ai-service/data/
+ai-service/.pytest_cache/
+ai-service/**/__pycache__/
+ai-service/**/.pytest_cache/

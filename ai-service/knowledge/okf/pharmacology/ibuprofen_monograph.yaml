@@ -1,0 +1,70 @@
+id: OKF-PHARM-001
+title: Clinical Drug Monograph for Ibuprofen (Nonsteroidal Anti-inflammatory Drug)
+clinical_domain: Pharmacology
+version: "1.4"
+provenance:
+  source_id: FDA-PUBMED-IBU-2024
+  title: FDA & British National Formulary Ibuprofen Prescribing Information
+  url: https://www.accessdata.fda.gov/drugsatfda_docs/label/2021/018985s026lbl.pdf
+  publication_date: "2024-01-10"
+  version: "1.4"
+  is_clinically_approved: true
+  reviewed_by: "Dr. James Brown, MBBS (Internal Medicine)"
+  evidence_level: "Level A (FDA Approved Monograph)"
+
+sections:
+  - heading: Therapeutic Indications & Mechanism
+    content: |
+      Ibuprofen is a propionic acid derivative nonsteroidal anti-inflammatory drug (NSAID) with analgesic, antipyretic, and anti-inflammatory properties.
+      Mechanism: Reversible inhibition of cyclooxygenase enzymes (COX-1 and COX-2), reducing pro-inflammatory prostaglandin synthesis.
+      Indications: Mild to moderate pain, dysmenorrhea, dental pain, osteoarthritis, rheumatoid arthritis, and fever.
+    key_findings:
+      - "Standard adult analgesic dose: 200 mg to 400 mg every 4 to 6 hours orally as needed."
+      - "Maximum recommended over-the-counter daily dose: 1200 mg/day; prescription maximum: 2400 mg/day under medical supervision."
+
+
+  - heading: Contraindications & Black Box Warnings
+    content: |
+      Black Box Warning: Increased risk of serious cardiovascular thrombotic events (myocardial infarction and stroke), which may occur early in treatment.
+      Contraindicated in the setting of coronary artery bypass graft (CABG) surgery.
+      Causes serious gastrointestinal adverse events including bleeding, ulceration, and perforation of stomach or intestines.
+    contraindications:
+      - Active peptic ulcer disease or gastrointestinal bleeding.
+      - Severe heart failure (NYHA Class II-IV).
+      - Severe renal impairment (GFR < 30 mL/min).
+      - Third trimester of pregnancy (causes premature closure of fetal ductus arteriosus and renal impairment).
+      - Known hypersensitivity or bronchospasm induced by aspirin or other NSAIDs.
+
+  - heading: Drug-Drug Interactions
+    content: |
+      - Anticoagulants (Warfarin, Apixaban) & Antiplatelets (Aspirin, Clopidogrel): Markedly elevated gastrointestinal hemorrhage risk.
+      - Antihypertensives (ACE inhibitors, ARBs, Beta-blockers): NSAIDs may diminish antihypertensive efficacy and precipitate acute kidney injury.
+      - Lithium & Methotrexate: Ibuprofen decreases renal clearance, leading to potential drug toxicity.
+
+entities:
+  - id: MED_IBUPROFEN
+    name: Ibuprofen
+    type: Medication
+  - id: COND_ARTHRITIS
+    name: Osteoarthritis
+    type: Condition
+  - id: COND_PEPTIC_ULCER
+    name: Peptic Ulcer Disease
+    type: Condition
+  - id: SYMP_GI_BLEED
+    name: Gastrointestinal Bleeding
+    type: Symptom
+  - id: SPEC_INTERNAL_MED
+    name: Internal Medicine
+    type: Specialization
+
+relationships:
+  - source_id: MED_IBUPROFEN
+    target_id: COND_ARTHRITIS
+    type: TREATS
+  - source_id: MED_IBUPROFEN
+    target_id: COND_PEPTIC_ULCER
+    type: CONTRAINDICATED_IN
+  - source_id: COND_PEPTIC_ULCER
+    target_id: SYMP_GI_BLEED
+    type: PRESENTS_WITH

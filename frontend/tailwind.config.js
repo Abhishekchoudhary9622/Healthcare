@@ -39,7 +39,8 @@ export default {
         },
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        sans: ['Geologica', 'Inter', 'system-ui', 'sans-serif'],
+        geologica: ['Geologica', 'sans-serif'],
       },
       borderRadius: {
         xl:  '0.75rem',

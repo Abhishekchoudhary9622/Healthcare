@@ -33,6 +33,7 @@ const hospitalRoutes = require('./routes/hospital.routes');
 const notificationRoutes = require('./routes/notification.routes');
 const telemedicineRoutes = require('./routes/telemedicine.routes');
 const consultationRoutes = require('./routes/consultation.routes');
+const aiRoutes = require('./routes/ai.routes');
 
 const app = express();
 const server = http.createServer(app);
@@ -158,6 +159,7 @@ app.use('/api/hospitals', hospitalRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/telemedicine', telemedicineRoutes);
 app.use('/api/consultation', consultationRoutes);
+app.use('/api/ai', aiRoutes);
 
 app.get('/health', (req, res) => {
   const mongoose = require('mongoose');
@@ -171,7 +173,10 @@ app.get('/health', (req, res) => {
   });
 });
 
-const publicPath = path.join(__dirname, '..', 'public');
+const fs = require('fs');
+const frontendDist = path.join(__dirname, '..', '..', 'frontend', 'dist');
+const localPublic = path.join(__dirname, '..', 'public');
+const publicPath = fs.existsSync(path.join(frontendDist, 'index.html')) ? frontendDist : localPublic;
 
 app.use(
   express.static(publicPath, {

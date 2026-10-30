@@ -1,4 +1,9 @@
 const mongoose = require('mongoose');
-const s = new mongoose.Schema({ doctorProfileId: { type: mongoose.Schema.Types.ObjectId, ref: 'DoctorProfile', required: true }, patientProfileId: { type: mongoose.Schema.Types.ObjectId, ref: 'PatientProfile', required: true }, scheduledAt: { type: Date, required: true }, endsAt: { type: Date, required: true }, status: { type: String, enum: ['PENDING','CONFIRMED','CANCELLED','COMPLETED','RESCHEDULED','HELD'], default: 'PENDING' }, holdExpiresAt: Date, symptoms: String, preVisitSummary: String, urgencyLevel: { type: String, enum: ['LOW','MEDIUM','HIGH'] }, chiefComplaint: String, suggestedQuestions: { type: [String], default: [] }, clinicalNotes: String, prescription: String, postVisitSummary: String, followUpDate: Date, googleCalendarEventIdDoctor: String, googleCalendarEventIdPatient: String, cancelReason: String, rescheduledFrom: String }, { timestamps: true });
+const s = new mongoose.Schema({ doctorProfileId: { type: mongoose.Schema.Types.ObjectId, ref: 'DoctorProfile', required: true }, patientProfileId: { type: mongoose.Schema.Types.ObjectId, ref: 'PatientProfile', required: true }, scheduledAt: { type: Date, required: true }, endsAt: { type: Date, required: true }, status: { type: String, enum: ['PENDING','CONFIRMED','CANCELLED','COMPLETED','RESCHEDULED','HELD'], default: 'PENDING' }, holdExpiresAt: Date, symptoms: String, preVisitSummary: String, urgencyLevel: { type: String, enum: ['LOW','MEDIUM','HIGH'] }, chiefComplaint: String, suggestedQuestions: { type: [String], default: [] }, clinicalNotes: String, prescription: String, postVisitSummary: String, followUpDate: Date, googleCalendarEventIdDoctor: String, googleCalendarEventIdPatient: String, cancelReason: String, rescheduledFrom: String }, { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } });
 s.index({ doctorProfileId: 1, scheduledAt: 1 });
+s.virtual('prescriptions', {
+  ref: 'Prescription',
+  localField: '_id',
+  foreignField: 'appointmentId'
+});
 module.exports = mongoose.model('Appointment', s);

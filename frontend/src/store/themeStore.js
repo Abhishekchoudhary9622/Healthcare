@@ -1,19 +1,16 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-const applyTheme = (theme) => {
+const applyTheme = (theme = 'light') => {
   const root = document.documentElement;
-  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-  const shouldDark = theme === 'dark' || (theme === 'system' && prefersDark);
-  root.classList.toggle('dark', shouldDark);
+  // User requested clean Light mode UI/UX throughout
+  root.classList.remove('dark');
 };
-
-let mediaListenerAdded = false;
 
 export const useThemeStore = create(
   persist(
-    (set, get) => ({
-      theme: 'dark',
+    (set) => ({
+      theme: 'light',
 
       setTheme: (theme) => {
         applyTheme(theme);
@@ -21,14 +18,7 @@ export const useThemeStore = create(
       },
 
       initTheme: () => {
-        const { theme } = get();
-        applyTheme(theme);
-        if (!mediaListenerAdded) {
-          mediaListenerAdded = true;
-          window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-            if (get().theme === 'system') applyTheme('system');
-          });
-        }
+        applyTheme('light');
       },
     }),
     { name: 'theme-store' }

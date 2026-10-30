@@ -1,0 +1,65 @@
+id: OKF-EMERG-001
+title: Emergency Triage Protocol for Acute Coronary Syndromes and Chest Pain
+clinical_domain: Emergency Medicine
+version: "1.2"
+provenance:
+  source_id: AHA-ESC-ACS-2024
+  title: AHA/ACC/ESC Consensus Guidelines on Emergency Chest Pain Triage
+  url: https://www.ahajournals.org/doi/10.1161/CIR.0000000000001029
+  publication_date: "2024-02-20"
+  version: "1.2"
+  is_clinically_approved: true
+  reviewed_by: "Dr. Emily Williams, MD, FACC (Cardiology)"
+  evidence_level: "Level A (Emergency Clinical Guidelines)"
+
+sections:
+  - heading: Acute Red Flag Symptoms Requiring Immediate Emergency Escalation
+    content: |
+      Any patient presenting with crushing retrosternal chest pain radiating to the left arm, shoulder, jaw, or epigastrium,
+      associated with diaphoresis (cold sweats), acute dyspnea, nausea, or syncope, meets the criteria for suspected Acute Myocardial Infarction.
+      Action: IMMEDIATE EMERGENCY ESCALATION. Direct the patient to emergency medical services (911 / 108). Do NOT delay for routine booking.
+    red_flags:
+      - Heavy pressure or squeezing retrosternal chest pain > 10 minutes
+      - Radiation to left arm, bilateral arms, neck, or jaw
+      - Profuse cold sweating (diaphoresis) with nausea or lightheadedness
+      - Acute shortness of breath at rest
+
+  - heading: Initial Pre-Hospital Clinical Guidance
+    content: |
+      - Keep patient seated or resting in comfortable position (semifowler position).
+      - Instruct to chew Aspirin (160 to 325 mg non-enteric coated) if no known severe aspirin allergy or active major bleeding.
+      - If patient has prescribed sublingual Nitroglycerin, administer 1 dose under the tongue while awaiting emergency transport.
+      - Prepare for automated external defibrillator (AED) access if syncope or loss of pulse occurs.
+    contraindications:
+      - Do NOT administer Nitroglycerin if patient has used PDE-5 inhibitors (Sildenafil, Tadalafil) within past 24-48 hours (risk of severe refractory hypotension).
+
+entities:
+  - id: COND_MYOCARDIAL_INFARCTION
+    name: Acute Myocardial Infarction
+    type: Condition
+  - id: SYMP_CHEST_PRESSURE
+    name: Substernal Chest Pressure
+    type: Symptom
+  - id: SYMP_DIAPHORESIS
+    name: Diaphoresis (Cold Sweats)
+    type: Symptom
+  - id: SPEC_EMERGENCY
+    name: Emergency Medicine
+    type: Specialization
+  - id: SPEC_CARDIOLOGY
+    name: Cardiology
+    type: Specialization
+
+relationships:
+  - source_id: COND_MYOCARDIAL_INFARCTION
+    target_id: SYMP_CHEST_PRESSURE
+    type: PRESENTS_WITH
+  - source_id: COND_MYOCARDIAL_INFARCTION
+    target_id: SYMP_DIAPHORESIS
+    type: PRESENTS_WITH
+  - source_id: COND_MYOCARDIAL_INFARCTION
+    target_id: SPEC_CARDIOLOGY
+    type: BELONGS_TO_SPECIALTY
+  - source_id: SYMP_CHEST_PRESSURE
+    target_id: SPEC_EMERGENCY
+    type: ESCALATES_TO_EMERGENCY

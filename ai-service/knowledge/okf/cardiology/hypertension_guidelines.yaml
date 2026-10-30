@@ -1,0 +1,74 @@
+id: OKF-CARD-001
+title: Clinical Practice Guideline for the Management of Systemic Arterial Hypertension
+clinical_domain: Cardiology
+version: "2.1"
+provenance:
+  source_id: ACC-AHA-HTN-2024
+  title: ACC/AHA Clinical Practice Guidelines on High Blood Pressure in Adults
+  url: https://www.ahajournals.org/doi/10.1161/HYP.0000000000000065
+  publication_date: "2024-03-15"
+  version: "2.1"
+  is_clinically_approved: true
+  reviewed_by: "Dr. Emily Williams, MD, FACC (Senior Cardiologist)"
+  evidence_level: "Level A (High Quality Randomized Controlled Trials)"
+
+sections:
+  - heading: Diagnostic Classification & Thresholds
+    content: |
+      Hypertension in adults is classified into four discrete clinical categories based on average seated resting blood pressure:
+      - Normal: Systolic < 120 mmHg and Diastolic < 80 mmHg.
+      - Elevated: Systolic 120-129 mmHg and Diastolic < 80 mmHg.
+      - Stage 1 Hypertension: Systolic 130-139 mmHg or Diastolic 80-89 mmHg.
+      - Stage 2 Hypertension: Systolic >= 140 mmHg or Diastolic >= 90 mmHg.
+    key_findings:
+      - Confirm elevation with ambulatory BP monitoring or repeated measurements across 2 visits.
+      - Target BP for treated adults is < 130/80 mmHg.
+
+  - heading: Pharmacotherapy & Drug Selection
+    content: |
+      First-line pharmacotherapy for Stage 1 or Stage 2 hypertension includes:
+      - Thiazide diuretics (Chlorthalidone, Hydrochlorothiazide)
+      - ACE inhibitors (Lisinopril, Enalapril)
+      - Angiotensin Receptor Blockers (Losartan, Telmisartan)
+      - Calcium Channel Blockers (Amlodipine)
+    contraindications:
+      - ACE inhibitors and ARBs are strictly contraindicated during pregnancy due to fetal renal dysgenesis risk.
+      - Avoid combining ACE inhibitors and ARBs simultaneously due to hyperkalemia and renal injury risks.
+
+  - heading: Hypertensive Crisis & Emergency Red Flags
+    content: |
+      A blood pressure reading with Systolic > 180 mmHg or Diastolic > 120 mmHg indicates hypertensive crisis.
+      If accompanied by target organ damage symptoms (chest pain, shortness of breath, acute neurological deficits, visual disturbances), immediate emergency hospital admission is required.
+    red_flags:
+      - Severe acute headache with altered mental state
+      - Retinal hemorrhage or papilledema
+      - Chest tightness radiating to left arm or jaw (suspected ACS)
+      - Acute dyspnea with pulmonary edema
+
+entities:
+  - id: COND_HYPERTENSION
+    name: Hypertension
+    type: Condition
+  - id: SYMP_CHEST_PAIN
+    name: Chest Pain
+    type: Symptom
+  - id: SYMP_HEADACHE
+    name: Severe Headache
+    type: Symptom
+  - id: MED_AMLODIPINE
+    name: Amlodipine
+    type: Medication
+  - id: SPEC_CARDIOLOGY
+    name: Cardiology
+    type: Specialization
+
+relationships:
+  - source_id: COND_HYPERTENSION
+    target_id: SPEC_CARDIOLOGY
+    type: BELONGS_TO_SPECIALTY
+  - source_id: MED_AMLODIPINE
+    target_id: COND_HYPERTENSION
+    type: TREATS
+  - source_id: COND_HYPERTENSION
+    target_id: SYMP_HEADACHE
+    type: PRESENTS_WITH

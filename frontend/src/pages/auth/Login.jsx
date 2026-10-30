@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import {
   Activity, Mail, Lock, Eye, EyeOff, ArrowRight, Phone, KeyRound,
   CheckCircle2, ArrowLeft, ShieldCheck, RefreshCw, Award, Star, Clock,
-  HeartPulse, Stethoscope, Sparkles
+  HeartPulse, Stethoscope, Sparkles, UserCheck
 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { useToast } from '@/components/ui/Toast';
@@ -12,7 +12,6 @@ import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Modal from '@/components/ui/Modal';
 import GoogleAuthModal from '@/components/shared/GoogleAuthModal';
-import { useGoogleLogin } from '@react-oauth/google';
 import api from '@/lib/api';
 import { cn } from '@/lib/utils';
 
@@ -47,7 +46,7 @@ export default function Login() {
   const otpInputsRef = useRef([]);
   const forgotOtpInputsRef = useRef([]);
 
-  const { register, handleSubmit, formState: { errors } } = useForm();
+  const { register, handleSubmit, setValue, formState: { errors } } = useForm();
 
   // Cooldown countdown timer
   useEffect(() => {
@@ -58,19 +57,19 @@ export default function Login() {
   }, [cooldown]);
 
   const navigateByRole = (user) => {
-    const routes = { PATIENT: '/patient', DOCTOR: '/doctor', ADMIN: '/admin', DRIVER: '/driver' };
-    navigate(routes[user?.role] || '/');
+    if (!user) return navigate('/patient');
+    const portals = { PATIENT: '/patient', DOCTOR: '/doctor', ADMIN: '/admin', DRIVER: '/driver' };
+    navigate(portals[user.role] || '/patient');
   };
 
-  // Standard Email/Password login
-  const onSubmit = async ({ email, password }) => {
+  const onSubmit = async (data) => {
     setLoading(true);
     try {
-      const user = await login(email, password);
-      toast({ type: 'success', title: 'Welcome back!', message: `Logged in as ${user.firstName}` });
+      const user = await login(data.email, data.password);
+      toast({ type: 'success', title: 'Welcome back!', message: `Logged in as ${user.firstName || 'Patient'}` });
       navigateByRole(user);
     } catch (err) {
-      toast({ type: 'error', title: 'Login failed', message: err.response?.data?.message || 'Invalid credentials' });
+      toast({ type: 'error', title: 'Login failed', message: err.response?.data?.message || 'Invalid email or password' });
     } finally {
       setLoading(false);
     }
@@ -82,13 +81,20 @@ export default function Login() {
     try {
       const user = await loginWithGoogle(googleUser);
       setIsGoogleModalOpen(false);
-      toast({ type: 'success', title: 'Google Sign-In Successful', message: `Welcome back, ${user.firstName}!` });
+      toast({ type: 'success', title: 'Google Sign-In Successful', message: `Welcome, ${user.firstName}!` });
       navigateByRole(user);
     } catch (err) {
       toast({ type: 'error', title: 'Google authentication failed', message: err.response?.data?.message || 'Please try again' });
     } finally {
       setLoading(false);
     }
+  };
+
+  // Quick Demo Login helper
+  const handleDemoLogin = (email, password) => {
+    setValue('email', email);
+    setValue('password', password);
+    onSubmit({ email, password });
   };
 
   // Send Phone OTP
@@ -100,7 +106,7 @@ export default function Login() {
     try {
       const res = await api.post('/auth/send-otp', { phone });
       setOtpSent(true);
-      setCooldown(30); // 30 seconds resend cooldown
+      setCooldown(30);
       setOtpDigits(['', '', '', '', '', '']);
       if (res.data.data?.debugOtp) {
         setDebugOtp(res.data.data.debugOtp);
@@ -113,10 +119,8 @@ export default function Login() {
     }
   };
 
-  // Handle individual digit typing for Phone OTP
   const handleOtpChange = (index, value) => {
     if (value.length > 1) {
-      // Paste support
       const pasted = value.replace(/[^0-9]/g, '').slice(0, 6).split('');
       const nextDigits = [...otpDigits];
       pasted.forEach((char, i) => {
@@ -143,171 +147,156 @@ export default function Login() {
     }
   };
 
-  // Verify Phone OTP
   const handleVerifyPhoneOtp = async () => {
     const fullOtp = otpDigits.join('');
-    if (fullOtp.length < 6) {
-      return toast({ type: 'error', title: 'Incomplete Code', message: 'Please enter the 6-digit OTP' });
+    if (fullOtp.length !== 6) {
+      return toast({ type: 'error', title: 'Invalid OTP', message: 'Please enter all 6 digits of the OTP' });
     }
     setPhoneLoading(true);
     try {
       const user = await loginWithPhoneOtp(phone, fullOtp);
-      toast({ type: 'success', title: 'Verified Successfully', message: `Welcome, ${user.firstName}!` });
+      toast({ type: 'success', title: 'OTP Verified!', message: `Welcome back, ${user.firstName}!` });
       navigateByRole(user);
     } catch (err) {
-      toast({ type: 'error', title: 'Verification failed', message: err.response?.data?.message || 'Invalid or expired OTP' });
+      toast({ type: 'error', title: 'Verification Failed', message: err.response?.data?.message || 'Invalid OTP code' });
     } finally {
       setPhoneLoading(false);
     }
   };
 
-  // Forgot Password - Step 1: Send recovery OTP to email
-  const handleRequestResetOtp = async () => {
-    if (!forgotEmail || !forgotEmail.includes('@')) {
-      return toast({ type: 'error', title: 'Invalid Email', message: 'Please enter a valid email address' });
-    }
-    setForgotLoading(true);
-    try {
-      const res = await api.post('/auth/forgot-password', { email: forgotEmail });
-      setForgotStep(2);
-      setForgotOtpDigits(['', '', '', '', '', '']);
-      if (res.data.data?.debugOtp) {
-        setForgotDebugOtp(res.data.data.debugOtp);
-      }
-      toast({ type: 'success', title: 'Recovery Code Sent', message: '6-digit reset code has been sent to your email' });
-    } catch (err) {
-      toast({ type: 'error', title: 'Error', message: err.response?.data?.message || 'Could not process request' });
-    } finally {
-      setForgotLoading(false);
-    }
-  };
-
-  // Forgot Password - Step 2: Verify OTP and save new password
-  const handleConfirmPasswordReset = async () => {
-    const fullOtp = forgotOtpDigits.join('');
-    if (fullOtp.length < 6) {
-      return toast({ type: 'error', title: 'Incomplete Code', message: 'Please enter the 6-digit recovery code' });
-    }
-    if (newPassword.length < 8) {
-      return toast({ type: 'error', title: 'Weak Password', message: 'Password must be at least 8 characters' });
-    }
-    if (newPassword !== confirmPassword) {
-      return toast({ type: 'error', title: 'Password Mismatch', message: 'Passwords do not match' });
-    }
-
-    setForgotLoading(true);
-    try {
-      await api.post('/auth/reset-password', {
-        email: forgotEmail,
-        otp: fullOtp,
-        newPassword
-      });
-      toast({ type: 'success', title: 'Password Updated', message: 'Your password has been reset. Please sign in.' });
-      setForgotModalOpen(false);
-      setForgotStep(1);
-    } catch (err) {
-      toast({ type: 'error', title: 'Reset failed', message: err.response?.data?.message || 'Invalid or expired code' });
-    } finally {
-      setForgotLoading(false);
-    }
-  };
-
   return (
-    <div className="min-h-screen flex bg-[var(--bg-primary)] overflow-hidden">
-      {/* Left decorative medical showcase panel */}
-      <div className="hidden lg:flex lg:flex-1 bg-gradient-to-br from-[#071322] via-[#0a1e35] to-[#041a23] p-10 flex-col justify-between relative overflow-hidden border-r border-teal-500/15">
+    <div className="min-h-screen flex bg-[#F4F6FA] select-none font-sans">
+      
+      {/* Left decorative medical showcase panel (Clean Light Medical Theme) */}
+      <div className="hidden lg:flex lg:flex-1 bg-gradient-to-br from-[#EDF5FF] via-[#F4F8FD] to-[#E5F0FA] p-12 flex-col justify-between relative overflow-hidden border-r border-[#E6EBF2]">
         
-        {/* Soft background ambient lighting */}
-        <div className="absolute top-[-5%] left-[-5%] h-80 w-80 rounded-full bg-teal-500/15 blur-[100px] pointer-events-none" />
-        <div className="absolute bottom-[-5%] right-[-5%] h-96 w-96 rounded-full bg-emerald-500/10 blur-[120px] pointer-events-none" />
+        {/* Soft atmospheric gradient highlights */}
+        <div className="absolute top-[-10%] left-[-10%] h-96 w-96 rounded-full bg-[#1271F5]/10 blur-[90px] pointer-events-none" />
+        <div className="absolute bottom-[-10%] right-[-10%] h-96 w-96 rounded-full bg-emerald-400/10 blur-[100px] pointer-events-none" />
 
         {/* Top Header: Brand Logo */}
         <div className="relative z-10">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="h-12 w-12 rounded-2xl bg-gradient-to-tr from-teal-400 via-cyan-500 to-blue-600 p-[1.5px] shadow-lg shadow-teal-500/25">
-                <div className="h-full w-full bg-[#07172b] rounded-2xl flex items-center justify-center">
-                  <Activity className="h-6 w-6 text-teal-400" />
+              <div className="h-11 w-11 rounded-2xl bg-[#1271F5] flex items-center justify-center shadow-md shadow-[#1271F5]/25">
+                <div className="h-5 w-5 rounded-full bg-white flex items-center justify-center">
+                  <div className="h-2.5 w-2.5 rounded-full bg-[#1271F5]" />
                 </div>
               </div>
               <div>
-                <span className="text-white font-extrabold text-2xl tracking-tight">HealthSync</span>
-                <p className="text-xs text-teal-300/80 font-medium">Healthcare & Wellness Portal</p>
+                <span className="text-[#121A26] font-extrabold text-2xl tracking-tight">iMed Portal</span>
+                <p className="text-xs text-[#1271F5] font-semibold -mt-0.5">Healthcare & Patient Dashboard</p>
               </div>
             </div>
 
-            <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-semibold backdrop-blur-md">
-              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping" />
+            <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold">
+              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-ping" />
               <span>Care Network Online</span>
             </div>
           </div>
         </div>
 
-        {/* Middle Showcase: Photo Banner + Inspirational Quote */}
-        <div className="relative z-10 my-auto py-4 space-y-5 max-w-lg">
+        {/* Middle Showcase: Photo Banner + 1-Click Demo Logins */}
+        <div className="relative z-10 my-auto py-6 space-y-6 max-w-lg">
           
           {/* Aesthetic Medical Picture Card */}
-          <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-teal-500/20 group">
+          <div className="relative rounded-3xl overflow-hidden shadow-lg border border-white group">
             <img
-              src="/healthcare_hero.jpg"
+              src="/doctor_promo_portrait.jpg"
               alt="Medical Care Team"
-              className="w-full h-52 object-cover transition-transform duration-700 group-hover:scale-105"
+              className="w-full h-56 object-cover object-top transition-transform duration-700 group-hover:scale-105"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#071322] via-transparent to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
             
-            <div className="absolute bottom-3 left-4 right-4 flex items-center justify-between">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#071322]/80 border border-teal-500/30 text-teal-200 text-xs font-semibold backdrop-blur-md">
-                <ShieldCheck className="h-3.5 w-3.5 text-teal-400" />
-                Trusted by 12,000+ Families
+            <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/90 text-slate-800 text-xs font-bold shadow-sm backdrop-blur-md">
+                <ShieldCheck className="h-3.5 w-3.5 text-[#1271F5]" />
+                Trusted by 12,000+ Patients
               </div>
-              <span className="text-xs font-bold text-emerald-300 bg-emerald-950/70 px-2.5 py-1 rounded-full border border-emerald-500/30 backdrop-blur-md">
-                24/7 Care
+              <span className="text-xs font-bold text-emerald-800 bg-emerald-100/90 px-3 py-1 rounded-full shadow-sm backdrop-blur-md">
+                24/7 Verified Doctors
               </span>
             </div>
           </div>
 
-          {/* Inspirational Healthcare Quote */}
-          <div className="p-5 rounded-2xl bg-[#091b30]/80 border border-teal-500/20 backdrop-blur-md shadow-lg relative">
-            <div className="text-teal-400 text-3xl font-serif leading-none mb-1 opacity-60">“</div>
-            <p className="text-slate-200 text-sm font-medium italic leading-relaxed pl-2">
-              Wherever the art of Medicine is loved, there is also a love of Humanity.
-            </p>
-            <div className="flex items-center justify-between mt-3 pt-2.5 border-t border-slate-700/50 pl-2">
-              <span className="text-xs font-bold text-teal-300">— Hippocrates</span>
-              <span className="text-[11px] text-slate-400">Father of Modern Medicine</span>
+          {/* Quick 1-Click Demo Login Box (For Instant Evaluation) */}
+          <div className="p-5 rounded-3xl bg-white border border-[#E6EBF2] shadow-sm">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                Quick 1-Click Demo Logins
+              </span>
+              <span className="text-[11px] font-semibold text-[#1271F5] bg-blue-50 px-2 py-0.5 rounded-full">
+                Pre-configured
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2.5">
+              <button
+                type="button"
+                onClick={() => handleDemoLogin('patient@healthsync.com', 'Patient@123')}
+                className="p-3 rounded-2xl bg-[#F8FAFD] border border-slate-200/80 hover:border-[#1271F5] hover:bg-blue-50/50 text-left transition-all group"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-[#121A26] group-hover:text-[#1271F5]">
+                    Patient Account
+                  </span>
+                  <UserCheck className="h-3.5 w-3.5 text-[#1271F5]" />
+                </div>
+                <p className="text-[10px] text-slate-500 mt-0.5">patient@healthsync.com</p>
+                <span className="inline-block mt-1.5 text-[10px] font-bold text-[#1271F5]">
+                  Instant Sign In →
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleDemoLogin('dr.williams@healthsync.com', 'Doctor@123')}
+                className="p-3 rounded-2xl bg-[#F8FAFD] border border-slate-200/80 hover:border-emerald-500 hover:bg-emerald-50/50 text-left transition-all group"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-[#121A26] group-hover:text-emerald-600">
+                    Doctor Account
+                  </span>
+                  <Stethoscope className="h-3.5 w-3.5 text-emerald-600" />
+                </div>
+                <p className="text-[10px] text-slate-500 mt-0.5">dr.williams@healthsync.com</p>
+                <span className="inline-block mt-1.5 text-[10px] font-bold text-emerald-600">
+                  Instant Sign In →
+                </span>
+              </button>
             </div>
           </div>
 
-          {/* 3 Simple Healthcare Pillars */}
-          <div className="grid grid-cols-3 gap-2.5">
-            <div className="p-3 rounded-xl bg-[#07172b]/80 border border-slate-700/60 text-center">
+          {/* 3 Value Pillars */}
+          <div className="grid grid-cols-3 gap-3">
+            <div className="p-3 rounded-2xl bg-white border border-[#E6EBF2] text-center shadow-sm">
               <span className="text-lg">🩺</span>
-              <p className="text-xs font-bold text-white mt-1">Specialists</p>
-              <p className="text-[10px] text-slate-400 mt-0.5">Top Verified Doctors</p>
+              <p className="text-xs font-bold text-[#121A26] mt-1">Specialists</p>
+              <p className="text-[10px] text-slate-400 mt-0.5">Instant Telehealth</p>
             </div>
-            <div className="p-3 rounded-xl bg-[#07172b]/80 border border-slate-700/60 text-center">
+            <div className="p-3 rounded-2xl bg-white border border-[#E6EBF2] text-center shadow-sm">
               <span className="text-lg">🏥</span>
-              <p className="text-xs font-bold text-white mt-1">Hospitals</p>
-              <p className="text-[10px] text-slate-400 mt-0.5">Live Bed & SOS</p>
+              <p className="text-xs font-bold text-[#121A26] mt-1">Live Beds</p>
+              <p className="text-[10px] text-slate-400 mt-0.5">Nearby Hospitals</p>
             </div>
-            <div className="p-3 rounded-xl bg-[#07172b]/80 border border-slate-700/60 text-center">
+            <div className="p-3 rounded-2xl bg-white border border-[#E6EBF2] text-center shadow-sm">
               <span className="text-lg">📁</span>
-              <p className="text-xs font-bold text-white mt-1">Records</p>
-              <p className="text-[10px] text-slate-400 mt-0.5">Digital EHR History</p>
+              <p className="text-xs font-bold text-[#121A26] mt-1">Reports</p>
+              <p className="text-[10px] text-slate-400 mt-0.5">Digital Vitals</p>
             </div>
           </div>
         </div>
 
-        {/* Bottom Simple Metrics Bar */}
-        <div className="relative z-10 grid grid-cols-4 gap-2.5 pt-2">
+        {/* Bottom Trust Indicators */}
+        <div className="relative z-10 grid grid-cols-4 gap-3 pt-2">
           {[
             { label: 'Patients', value: '12,400+' },
-            { label: 'Doctors', value: '340+' },
-            { label: 'Rating', value: '4.9★' },
+            { label: 'Specialists', value: '340+' },
+            { label: 'Rating', value: '4.9 ★' },
             { label: 'Support', value: '24/7' },
           ].map(({ label, value }) => (
-            <div key={label} className="bg-[#07172b]/80 border border-slate-800 backdrop-blur-md rounded-xl p-2.5 text-center">
-              <p className="text-sm xl:text-base font-extrabold text-white">{value}</p>
+            <div key={label} className="bg-white border border-[#E6EBF2] rounded-2xl p-2.5 text-center shadow-sm">
+              <p className="text-sm font-extrabold text-[#121A26]">{value}</p>
               <p className="text-slate-400 text-[10px] font-medium mt-0.5">{label}</p>
             </div>
           ))}
@@ -316,345 +305,282 @@ export default function Login() {
 
       {/* Right form container */}
       <div className="flex-1 flex flex-col items-center justify-center p-6 sm:p-12 max-w-xl mx-auto w-full">
-        <div className="w-full max-w-sm">
-          {/* Mobile brand */}
-          <div className="flex items-center gap-2.5 mb-8 lg:hidden">
-            <div className="h-10 w-10 rounded-2xl bg-gradient-to-br from-teal-400 to-blue-600 flex items-center justify-center shadow-lg shadow-teal-500/25">
-              <Activity className="h-5 w-5 text-white" />
+        <div className="w-full max-w-md bg-white border border-[#E6EBF2] shadow-xl rounded-[32px] p-8 md:p-10">
+          
+          {/* Header */}
+          <div className="mb-6">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-[#1271F5] text-[11px] font-bold mb-3">
+              <ShieldCheck className="h-3.5 w-3.5" /> HIPAA Encrypted Portal
             </div>
-            <div>
-              <span className="font-extrabold text-lg text-[var(--text-primary)]">HealthSync</span>
-              <p className="text-[10px] text-teal-500 font-bold uppercase tracking-wider">Clinical Care Portal</p>
-            </div>
+            <h1 className="text-2xl font-extrabold text-[#121A26] tracking-tight">
+              Sign in to your account
+            </h1>
+            <p className="mt-1 text-xs text-slate-500 font-medium">
+              Manage appointments, prescriptions & vital health records
+            </p>
           </div>
 
-          <h1 className="text-2xl font-bold text-[var(--text-primary)]">Welcome back</h1>
-          <p className="mt-1.5 text-sm text-[var(--text-secondary)]">Sign in to your account to continue</p>
-
-          {/* Social Google Login Button */}
-          <div className="mt-6">
-            <button
-              type="button"
-              onClick={() => setIsGoogleModalOpen(true)}
-              disabled={loading}
-              className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-2xl border border-[var(--border)] bg-[var(--bg-secondary)] hover:bg-[var(--bg-tertiary)] text-[var(--text-primary)] text-sm font-semibold shadow-sm transition-all hover:shadow hover:border-brand-500/50"
-            >
-              {/* Google G Multi-Color SVG */}
-              <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24">
-                <path
-                  fill="#4285F4"
-                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                />
-                <path
-                  fill="#34A853"
-                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                />
-                <path
-                  fill="#FBBC05"
-                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
-                />
-                <path
-                  fill="#EA4335"
-                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
-                />
-              </svg>
-              <span>Continue with Google</span>
-            </button>
-          </div>
+          {/* Social Google Sign-in */}
+          <button
+            type="button"
+            onClick={() => setIsGoogleModalOpen(true)}
+            disabled={loading}
+            className="w-full flex items-center justify-center gap-3 py-2.5 px-4 rounded-2xl border border-slate-200 bg-[#FAFBFD] hover:bg-slate-50 text-slate-700 text-xs font-bold shadow-sm transition-all active:scale-95 mb-5"
+          >
+            <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24">
+              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+            </svg>
+            <span>Continue with Google</span>
+          </button>
 
           {/* Divider */}
-          <div className="relative my-6">
+          <div className="relative my-5">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-[var(--border)]" />
+              <div className="w-full border-t border-slate-100" />
             </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-[var(--bg-primary)] px-2 text-[var(--text-muted)] font-medium">Or sign in with</span>
+            <div className="relative flex justify-center text-[10px] uppercase tracking-wider">
+              <span className="bg-white px-3 text-slate-400 font-bold">Or with credentials</span>
             </div>
           </div>
 
-          {/* Method Tabs: Email vs Phone */}
-          <div className="flex p-1 rounded-2xl bg-[var(--bg-tertiary)] border border-[var(--border)] mb-6 text-xs font-semibold">
+          {/* Auth Method Switcher Tabs */}
+          <div className="flex p-1 rounded-2xl bg-[#F4F6FA] border border-[#E6EBF2] mb-5">
             <button
               type="button"
               onClick={() => setAuthMethod('EMAIL')}
               className={cn(
-                'flex-1 py-2.5 rounded-xl transition-all flex items-center justify-center gap-1.5',
-                authMethod === 'EMAIL' ? 'bg-[var(--bg-secondary)] text-[var(--text-primary)] shadow-sm' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
+                'flex-1 py-2 text-xs font-bold rounded-xl transition-all duration-200 flex items-center justify-center gap-1.5',
+                authMethod === 'EMAIL'
+                  ? 'bg-white text-[#1271F5] shadow-sm'
+                  : 'text-slate-500 hover:text-slate-700'
               )}
             >
-              <Mail className="h-3.5 w-3.5" /> Email & Password
+              <Mail className="h-3.5 w-3.5" />
+              <span>Email & Password</span>
             </button>
             <button
               type="button"
               onClick={() => setAuthMethod('PHONE')}
               className={cn(
-                'flex-1 py-2.5 rounded-xl transition-all flex items-center justify-center gap-1.5',
-                authMethod === 'PHONE' ? 'bg-[var(--bg-secondary)] text-[var(--text-primary)] shadow-sm' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
+                'flex-1 py-2 text-xs font-bold rounded-xl transition-all duration-200 flex items-center justify-center gap-1.5',
+                authMethod === 'PHONE'
+                  ? 'bg-white text-[#1271F5] shadow-sm'
+                  : 'text-slate-500 hover:text-slate-700'
               )}
             >
-              <Phone className="h-3.5 w-3.5" /> Phone & OTP
+              <Phone className="h-3.5 w-3.5" />
+              <span>Phone OTP</span>
             </button>
           </div>
 
-          {/* Email / Password Form */}
-          {authMethod === 'EMAIL' && (
+          {/* Form 1: Email & Password */}
+          {authMethod === 'EMAIL' ? (
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              <Input
-                label="Email address"
-                type="email"
-                icon={Mail}
-                placeholder="you@example.com"
-                error={errors.email?.message}
-                {...register('email', { required: 'Email is required' })}
-              />
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Email Address</label>
+                <div className="relative">
+                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+                  <input
+                    type="email"
+                    placeholder="you@example.com"
+                    className="w-full pl-10 pr-4 py-2.5 rounded-2xl border border-slate-200 bg-[#FAFBFD] text-xs text-[#121A26] placeholder:text-slate-400 focus:bg-white focus:border-[#1271F5] focus:outline-none focus:ring-2 focus:ring-[#1271F5]/10"
+                    {...register('email', { required: 'Email is required' })}
+                  />
+                </div>
+                {errors.email && <p className="text-[11px] text-rose-500 mt-1">{errors.email.message}</p>}
+              </div>
 
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <label className="block text-sm font-medium text-[var(--text-secondary)]">Password</label>
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-bold text-slate-700">Password</label>
                   <button
                     type="button"
-                    onClick={() => { setForgotModalOpen(true); setForgotStep(1); }}
-                    className="text-xs text-brand-600 dark:text-brand-400 font-semibold hover:underline"
+                    onClick={() => setForgotModalOpen(true)}
+                    className="text-[11px] font-bold text-[#1271F5] hover:underline"
                   >
                     Forgot password?
                   </button>
                 </div>
                 <div className="relative">
-                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--text-muted)] pointer-events-none" />
+                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
                   <input
                     type={showPassword ? 'text' : 'password'}
                     placeholder="••••••••"
-                    className={cn('input-base pl-10 pr-10', errors.password && 'border-danger-500')}
+                    className="w-full pl-10 pr-10 py-2.5 rounded-2xl border border-slate-200 bg-[#FAFBFD] text-xs text-[#121A26] placeholder:text-slate-400 focus:bg-white focus:border-[#1271F5] focus:outline-none focus:ring-2 focus:ring-[#1271F5]/10"
                     {...register('password', { required: 'Password is required' })}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
-                {errors.password && <p className="text-xs text-danger-500">{errors.password.message}</p>}
+                {errors.password && <p className="text-[11px] text-rose-500 mt-1">{errors.password.message}</p>}
               </div>
 
-              <Button type="submit" loading={loading} className="w-full h-11" size="lg" iconRight={ArrowRight}>
-                Sign in
-              </Button>
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full py-3 rounded-full bg-[#1271F5] hover:bg-[#0b5cd5] text-white text-xs font-bold shadow-md shadow-[#1271F5]/25 active:scale-95 transition-all flex items-center justify-center gap-2 mt-2"
+              >
+                {loading ? 'Authenticating...' : 'Sign In to Portal →'}
+              </button>
             </form>
-          )}
-
-          {/* Phone Number & OTP Form */}
-          {authMethod === 'PHONE' && (
-            <div className="space-y-4 animate-in fade-in duration-200">
-              {!otpSent ? (
-                <div className="space-y-4">
-                  <div className="space-y-1.5">
-                    <label className="block text-sm font-medium text-[var(--text-secondary)]">Mobile Phone Number</label>
-                    <div className="relative">
-                      <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--text-muted)] pointer-events-none" />
-                      <input
-                        type="tel"
-                        placeholder="9876543210 or +91 9876543210"
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
-                        className="input-base pl-10"
-                      />
-                    </div>
-                    <p className="text-[11px] text-[var(--text-muted)]">We will send a 6-digit OTP code to verify your mobile number.</p>
+          ) : (
+            /* Form 2: Phone OTP */
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Mobile Phone Number</label>
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+                    <input
+                      type="tel"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder="+91 98765 43210"
+                      className="w-full pl-10 pr-4 py-2.5 rounded-2xl border border-slate-200 bg-[#FAFBFD] text-xs text-[#121A26] focus:bg-white focus:border-[#1271F5] focus:outline-none"
+                    />
                   </div>
-
-                  <Button
+                  <button
                     type="button"
                     onClick={handleSendPhoneOtp}
-                    loading={phoneLoading}
-                    className="w-full h-11 bg-brand-600 text-white font-bold"
-                    size="lg"
-                    iconRight={ArrowRight}
+                    disabled={phoneLoading || cooldown > 0}
+                    className="px-4 py-2.5 rounded-2xl bg-[#1271F5] text-white text-xs font-bold hover:bg-[#0b5cd5] disabled:opacity-50 transition-all whitespace-nowrap shadow-sm"
                   >
-                    Send Verification Code
-                  </Button>
+                    {cooldown > 0 ? `${cooldown}s` : otpSent ? 'Resend' : 'Send OTP'}
+                  </button>
                 </div>
-              ) : (
-                <div className="space-y-4">
-                  <div className="p-3 bg-brand-50 dark:bg-brand-500/10 rounded-2xl border border-brand-200 dark:border-brand-900/50 flex items-center justify-between text-xs">
-                    <div>
-                      <p className="font-semibold text-brand-700 dark:text-brand-300">Code sent to {phone}</p>
-                      {debugOtp && <p className="text-[10px] text-brand-600 font-mono mt-0.5 font-bold">Auto-Test Code: {debugOtp}</p>}
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setOtpSent(false)}
-                      className="text-brand-600 dark:text-brand-400 font-bold hover:underline"
-                    >
-                      Change
-                    </button>
+              </div>
+
+              {otpSent && (
+                <div className="space-y-3 pt-2">
+                  <label className="block text-xs font-bold text-slate-700">Enter 6-Digit Code</label>
+                  <div className="flex justify-between gap-2">
+                    {otpDigits.map((digit, idx) => (
+                      <input
+                        key={idx}
+                        ref={(el) => (otpInputsRef.current[idx] = el)}
+                        type="text"
+                        maxLength={1}
+                        value={digit}
+                        onChange={(e) => handleOtpChange(idx, e.target.value)}
+                        onKeyDown={(e) => handleOtpKeyDown(idx, e)}
+                        className="w-11 h-12 text-center text-base font-extrabold rounded-2xl border border-slate-200 bg-[#FAFBFD] focus:border-[#1271F5] focus:bg-white focus:outline-none shadow-sm"
+                      />
+                    ))}
                   </div>
 
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <label className="block text-sm font-medium text-[var(--text-secondary)]">Enter 6-Digit Code</label>
-                      {cooldown > 0 ? (
-                        <span className="text-[11px] text-[var(--text-muted)] font-medium">Resend in {cooldown}s</span>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={handleSendPhoneOtp}
-                          className="text-[11px] text-brand-600 dark:text-brand-400 font-bold hover:underline flex items-center gap-1"
-                        >
-                          <RefreshCw className="h-3 w-3" /> Resend OTP
-                        </button>
-                      )}
-                    </div>
+                  {debugOtp && (
+                    <p className="text-[11px] text-[#1271F5] font-semibold bg-blue-50 p-2 rounded-xl border border-blue-100">
+                      Debug OTP: <strong>{debugOtp}</strong>
+                    </p>
+                  )}
 
-                    {/* 6 Individual Digit Inputs */}
-                    <div className="flex justify-between gap-2">
-                      {otpDigits.map((digit, idx) => (
-                        <input
-                          key={idx}
-                          ref={el => otpInputsRef.current[idx] = el}
-                          type="text"
-                          maxLength="1"
-                          value={digit}
-                          onChange={(e) => handleOtpChange(idx, e.target.value)}
-                          onKeyDown={(e) => handleOtpKeyDown(idx, e)}
-                          className="h-12 w-11 text-center font-mono font-bold text-lg rounded-xl border border-[var(--border)] bg-[var(--bg-secondary)] text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 shadow-sm"
-                        />
-                      ))}
-                    </div>
-                  </div>
-
-                  <Button
+                  <button
                     type="button"
                     onClick={handleVerifyPhoneOtp}
-                    loading={phoneLoading}
-                    className="w-full h-11 bg-brand-600 text-white font-bold"
-                    size="lg"
-                    icon={CheckCircle2}
+                    disabled={phoneLoading}
+                    className="w-full py-3 rounded-full bg-[#1271F5] hover:bg-[#0b5cd5] text-white text-xs font-bold shadow-md shadow-[#1271F5]/25 active:scale-95 transition-all flex items-center justify-center gap-2"
                   >
-                    Verify & Sign In
-                  </Button>
+                    {phoneLoading ? 'Verifying...' : 'Verify Code & Sign In →'}
+                  </button>
                 </div>
               )}
             </div>
           )}
 
-          <p className="mt-6 text-center text-sm text-[var(--text-secondary)]">
-            No account?{' '}
-            <Link to="/register" className="text-brand-600 dark:text-brand-400 font-medium hover:underline">
-              Create one
-            </Link>
-          </p>
+          {/* Bottom link to Register */}
+          <div className="mt-6 pt-5 border-t border-slate-100 text-center">
+            <p className="text-xs text-slate-500 font-medium">
+              Don't have an account yet?{' '}
+              <Link to="/register" className="font-bold text-[#1271F5] hover:underline">
+                Create new account
+              </Link>
+            </p>
+          </div>
+
         </div>
       </div>
 
-      {/* Google Account Modal */}
-      <GoogleAuthModal
-        isOpen={isGoogleModalOpen}
-        onClose={() => setIsGoogleModalOpen(false)}
-        onSelectAccount={handleGoogleAccountSelected}
-        loading={loading}
-      />
+      {/* Google Auth Modal */}
+      {isGoogleModalOpen && (
+        <GoogleAuthModal
+          isOpen={isGoogleModalOpen}
+          onClose={() => setIsGoogleModalOpen(false)}
+          onSelectAccount={handleGoogleAccountSelected}
+        />
+      )}
 
-      {/* Forgot Password Reset Modal */}
-      <Modal open={forgotModalOpen} onClose={() => setForgotModalOpen(false)} title="Reset Password" size="sm">
-        <div className="p-6 space-y-4 text-xs">
-          {forgotStep === 1 ? (
-            <div className="space-y-4">
-              <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
-                Enter your registered email address and we'll send a 6-digit recovery code to reset your account password.
-              </p>
-              <div>
-                <label className="block font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">Email Address</label>
-                <input
-                  type="email"
-                  placeholder="name@example.com"
-                  value={forgotEmail}
-                  onChange={(e) => setForgotEmail(e.target.value)}
-                  className="input-base"
-                />
-              </div>
+      {/* Forgot Password Modal */}
+      {forgotModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-100 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+              <h3 className="font-bold text-base text-[#121A26]">Password Recovery</h3>
+              <button
+                onClick={() => setForgotModalOpen(false)}
+                className="h-8 w-8 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400"
+              >
+                ✕
+              </button>
+            </div>
 
-              <div className="flex gap-2 pt-2">
-                <Button variant="secondary" className="flex-1" onClick={() => setForgotModalOpen(false)}>
+            <p className="text-xs text-slate-500 mb-4">
+              Enter your account email to receive a secure recovery code.
+            </p>
+
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                setForgotLoading(true);
+                try {
+                  await api.post('/auth/forgot-password', { email: forgotEmail });
+                  toast({ type: 'success', title: 'Code Dispatched', message: 'Check your email inbox for instructions' });
+                  setForgotModalOpen(false);
+                } catch (err) {
+                  toast({ type: 'error', title: 'Error', message: err.response?.data?.message || 'Email not found' });
+                } finally {
+                  setForgotLoading(false);
+                }
+              }}
+              className="space-y-4"
+            >
+              <input
+                type="email"
+                value={forgotEmail}
+                onChange={(e) => setForgotEmail(e.target.value)}
+                placeholder="you@example.com"
+                required
+                className="w-full px-4 py-2.5 rounded-2xl border border-slate-200 bg-[#FAFBFD] text-xs text-[#121A26] focus:border-[#1271F5] focus:outline-none"
+              />
+
+              <div className="flex items-center justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setForgotModalOpen(false)}
+                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100"
+                >
                   Cancel
-                </Button>
-                <Button
-                  className="flex-1 bg-brand-600 text-white font-bold"
-                  loading={forgotLoading}
-                  onClick={handleRequestResetOtp}
+                </button>
+                <button
+                  type="submit"
+                  disabled={forgotLoading}
+                  className="px-5 py-2 rounded-xl bg-[#1271F5] text-white text-xs font-bold shadow-sm"
                 >
-                  Send Recovery Code
-                </Button>
+                  {forgotLoading ? 'Sending...' : 'Send Recovery Code'}
+                </button>
               </div>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <div className="p-3 bg-brand-50 dark:bg-brand-500/10 rounded-2xl border border-brand-200 text-xs">
-                <p className="font-semibold text-brand-700 dark:text-brand-300">Code sent to {forgotEmail}</p>
-                {forgotDebugOtp && <p className="text-[10px] text-brand-600 font-mono mt-0.5 font-bold">Auto-Test Code: {forgotDebugOtp}</p>}
-              </div>
-
-              <div>
-                <label className="block font-bold text-slate-700 dark:text-slate-300 uppercase mb-2">6-Digit Recovery Code</label>
-                <div className="flex justify-between gap-1.5">
-                  {forgotOtpDigits.map((digit, idx) => (
-                    <input
-                      key={idx}
-                      ref={el => forgotOtpInputsRef.current[idx] = el}
-                      type="text"
-                      maxLength="1"
-                      value={digit}
-                      onChange={(e) => {
-                        const next = [...forgotOtpDigits];
-                        next[idx] = e.target.value.replace(/[^0-9]/g, '');
-                        setForgotOtpDigits(next);
-                        if (e.target.value && idx < 5) forgotOtpInputsRef.current[idx + 1]?.focus();
-                      }}
-                      className="h-10 w-9 text-center font-mono font-bold text-base rounded-lg border border-[var(--border)] bg-[var(--bg-secondary)]"
-                    />
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <label className="block font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">New Password</label>
-                <input
-                  type="password"
-                  placeholder="Min. 8 characters"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  className="input-base"
-                />
-              </div>
-
-              <div>
-                <label className="block font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">Confirm New Password</label>
-                <input
-                  type="password"
-                  placeholder="Re-enter new password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="input-base"
-                />
-              </div>
-
-              <div className="flex gap-2 pt-2">
-                <Button variant="secondary" className="flex-1" onClick={() => setForgotStep(1)} icon={ArrowLeft}>
-                  Back
-                </Button>
-                <Button
-                  className="flex-1 bg-brand-600 text-white font-bold"
-                  loading={forgotLoading}
-                  onClick={handleConfirmPasswordReset}
-                >
-                  Reset Password
-                </Button>
-              </div>
-            </div>
-          )}
+            </form>
+          </div>
         </div>
-      </Modal>
+      )}
+
     </div>
   );
 }

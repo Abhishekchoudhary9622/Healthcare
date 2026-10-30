@@ -7,24 +7,17 @@
     <title>HealthSync</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Geologica:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
     <script>
-      // Apply theme before paint — prevents white flash on dark mode
+      // Clean light mode initialization
       (function () {
         try {
-          var s = JSON.parse(localStorage.getItem('theme-store') || '{}');
-          var theme = (s.state && s.state.theme) || 'dark';
-          var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-          if (theme === 'dark' || (theme === 'system' && prefersDark)) {
-            document.documentElement.classList.add('dark');
-          }
-        } catch (e) {
-          document.documentElement.classList.add('dark');
-        }
+          document.documentElement.classList.remove('dark');
+        } catch (e) {}
       })();
     </script>
     <style>
-      /* Critical CSS — prevent layout shift before React mounts */
+      /* Critical CSS */
       *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
       html, body, #root {
         width: 100%;
@@ -33,14 +26,10 @@
         overflow-x: hidden;
       }
       body {
-        font-family: 'Inter', system-ui, sans-serif;
-        background: #0d1117;
-        color: #e6edf3;
+        font-family: 'Geologica', 'Inter', system-ui, sans-serif;
+        background: #F4F6FA;
+        color: #121A26;
         -webkit-font-smoothing: antialiased;
-      }
-      body:not(.dark) {
-        background: #f8fafc;
-        color: #0f172a;
       }
     </style>
   </head>
